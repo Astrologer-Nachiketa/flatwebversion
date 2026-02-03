@@ -2312,7 +2312,7 @@
                 </div>
                 <div class="input-group">
                     <label class="algo-label">Quantity</label>
-                    <input type="number" id="quantity" class="algo-input" value="75" min="1">
+                    <input type="number" id="quantity" class="algo-input" value="65" min="1">
                 </div>
 
                 <div class="price-input-group">
@@ -3408,7 +3408,7 @@
                     <td>${script.tsym}</td>
                     <td>${script.exch}</td>
                     <td class="${script.data.ltpClass || ''}">${script.data.lp || '-'}</td>
-                    <td><input type="number" class="qty-input" value="75" min="1"></td>
+                    <td><input type="number" class="qty-input" value="65" min="1"></td>
                     <td>
                         <input type="number" class="trigger-value" placeholder="Enter value" value="${script.triggerValue || ''}" min="0" step="any">
                         <select class="trigger-value-source">
@@ -3450,7 +3450,7 @@
                 button.addEventListener('click', (e) => {
                     const action = e.target.getAttribute('data-action');
                     const scriptKey = e.target.getAttribute('data-script');
-                    const quantity = (parseInt(e.target.closest('tr').querySelector('.qty-input').value) || 75).toString();
+                    const quantity = (parseInt(e.target.closest('tr').querySelector('.qty-input').value) || 65).toString();
                     if (action === 'buy') {
                         placeOrder('B', scriptKey, quantity);
                     } else if (action === 'sell') {
@@ -3762,7 +3762,7 @@
                 }
             }
 
-            row.querySelector('.qty-input').value = row.querySelector('.qty-input').value || '75';
+            row.querySelector('.qty-input').value = row.querySelector('.qty-input').value || '65';
 
             // Live update of trigger value - immediate update
             const triggerInput = row.querySelector('.trigger-value');
