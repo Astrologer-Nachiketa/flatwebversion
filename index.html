@@ -868,18 +868,13 @@
 
         .status-bar {
             display: flex;
-            gap: 10px;
-            /* Reduced gap significantly */
-            padding: 8px;
-            /* Reduced padding */
+            gap: 8px;
+            padding: 6px 8px;
             background: white;
-            border-radius: 6px;
-            /* Smaller radius */
-            margin-bottom: 10px;
-            /* Reduced margin */
+            border-radius: 4px;
+            margin-bottom: 8px;
             align-items: center;
             font-size: 13px;
-            /* Smaller font */
         }
 
         .order-details-grid {
@@ -926,25 +921,199 @@
             transition: color 0.3s ease;
         }
 
-        .stop-trigger-btn {
-            background-color: #dc3545;
+        #activeTriggerStatus.waiting {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        /* Active Triggers Display Styles */
+        .active-triggers-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .active-triggers-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .trigger-card {
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .trigger-card:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .trigger-card.buy-trigger {
+            border-left-color: #28a745;
+        }
+
+        .trigger-card.sell-trigger {
+            border-left-color: #dc3545;
+        }
+
+        .trigger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .trigger-symbol {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .trigger-type-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .trigger-card.buy-trigger .trigger-type-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .trigger-card.sell-trigger .trigger-type-badge {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .trigger-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .trigger-detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .trigger-detail-label {
+            color: #999;
+        }
+
+        .trigger-detail-value {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .trigger-timer {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trigger-timer.expiring-soon {
+            background: #f8d7da;
+            color: #721c24;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .trigger-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .trigger-cancel-btn {
+            flex: 1;
+            background: #dc3545;
             color: white;
             border: none;
+            padding: 5px 10px;
             border-radius: 4px;
-            padding: 8px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .trigger-cancel-btn:hover {
+            background: #c82333;
+            transform: scale(1.02);
+        }
+
+        .no-triggers-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .trigger-count-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .trigger-count-badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stop-trigger-btn {
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
             cursor: pointer;
             font-weight: 500;
+            font-size: 12px;
             transition: all 0.3s ease;
         }
 
         .stop-trigger-btn:disabled {
             background-color: #6c757d;
+            color: white;
             cursor: not-allowed;
             opacity: 0.65;
         }
 
         .stop-trigger-btn:not(:disabled):hover {
-            background-color: #c82333;
+            background-color: #e0a800;
             transform: scale(1.05);
         }
 
@@ -1148,18 +1317,7 @@
             margin-bottom: 1px;
         }
 
-        .stop-trigger-btn {
-            background-color: #ffc107;
-            /* Warning yellow */
-            color: #333;
-            padding: 4px 8px;
-            /* Reduced */
-            font-size: 12px;
-            /* Smaller */
-        }
 
-        /* .stop-trigger-btn:disabled { ... styles ... } */
-        /* Removed empty ruleset */
 
         /* Algo Trading Tab Styles */
         .tab-bar {
@@ -3109,17 +3267,19 @@
                 <div>LTP: <span id="currentPrice">-</span></div>
                 <div>P&L: <span id="totalPnl">0.00</span></div>
                 <div>Active: <span id="activeCount">0</span></div>
-                <div>Timeout (min): <input type="number" id="triggerTimeout" min="1" value="5"
-                        style="width: 60px; padding: 2px 4px; margin: 0 4px;"></div>
-                <div>Active Trigger: <span id="activeTriggerStatus">None</span></div>
-                <button id="stopTriggerBtn" class="stop-trigger-btn" onclick="OrderSystem.stopAllTriggers()"
-                    disabled>Stop Trigger</button>
-                <div style="margin-left: 15px;">
-                    <label for="autoPlaceOrderToggle"
-                        style="margin-right: 5px; font-weight: 500;">AutoPlaceOrder:</label>
-                    <input type="checkbox" id="autoPlaceOrderToggle" style="margin-right: 5px;">
-                    <span id="autoPlaceOrderStatus" style="font-size: 12px; color: #666;">Disabled</span>
+                <div>Timeout (min): <input type="number" id="triggerTimeout" min="1" value="5" style="width: 50px;">
                 </div>
+                <div>Trigger: <span id="activeTriggerStatus">None</span></div>
+                <button id="stopTriggerBtn" class="stop-trigger-btn" onclick="OrderSystem.stopAllTriggers()" disabled>⏹️
+                    Stop All</button>
+            </div>
+
+            <!-- AutoPlaceOrder Toggle -->
+            <div
+                style="margin: 8px 0; padding: 6px 8px; background: white; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                <label for="autoPlaceOrderToggle" style="font-weight: 500;">AutoPlaceOrder:</label>
+                <input type="checkbox" id="autoPlaceOrderToggle">
+                <span id="autoPlaceOrderStatus" style="font-size: 12px; color: #666;">Disabled</span>
             </div>
 
             <!-- NEW Container for the two columns -->
@@ -3320,6 +3480,14 @@
 
                 <!-- Right Column -->
                 <div class="algo-column-right">
+                    <!-- Active Triggers Section -->
+                    <div class="algo-section active-triggers-section">
+                        <h3>⏰ Active Triggers</h3>
+                        <div id="activeTriggersList" class="active-triggers-list">
+                            <div class="no-triggers-message">No active triggers</div>
+                        </div>
+                    </div>
+
                     <div class="algo-section"> <!-- Existing Modify Order Section -->
                         <h3>⚙️ Modify Order</h3>
                         <div class="input-group">
@@ -3405,8 +3573,7 @@
         const subscribedScripts = new Map();
         let historicalInterval = null;
         let historicalDataInterval;
-        let pollingInterval;
-        let isTriggerActive = false;
+        let pollingIntervals = new Map(); // Store polling intervals per row (key: scriptKey, value: intervalId)
         const MA_PERIOD = 60; // Number of ticks to store for moving averages (60 ticks)
         const EMA_WEIGHT = 2 / (MA_PERIOD + 1); // Weighting factor for EMA calculation
 
@@ -4116,6 +4283,13 @@
             }
 
             try {
+                // Clear any armed trigger for this script before unsubscribing
+                if (pollingIntervals.has(scriptKey)) {
+                    clearInterval(pollingIntervals.get(scriptKey));
+                    pollingIntervals.delete(scriptKey);
+                    console.log(`Cleared armed trigger for ${scriptKey} during unsubscribe`);
+                }
+                
                 subscribedScripts.delete(scriptKey);
                 ws.send(JSON.stringify({ t: "u", k: scriptKey }));
                 console.log('Unsubscribed:', scriptKey);
@@ -4278,6 +4452,9 @@
                         <option value="trade_ratio_lt_sma_lt_ema" ${script.triggerType === 'trade_ratio_lt_sma_lt_ema' ? 'selected' : ''}>Trade Ratio < SMA < EMA</option>
                         </select>
                         <button class="arm-trigger">Arm Trigger</button>
+                        <label style="font-size: 11px; margin-left: 5px; display: inline-flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" class="telegram-only-trigger" style="margin-right: 3px;"> 📱 Alert Only
+                        </label>
                     </td>
                     <td><button class="subscribe-btn" data-action="buy" data-script="${key}">Buy</button></td>
                     <td><button class="sell-btn" data-action="sell" data-script="${key}">Sell</button></td>
@@ -4307,9 +4484,14 @@
             // Attach event listener to Arm Trigger buttons
             tbody.querySelectorAll('.arm-trigger').forEach(button => {
                 button.addEventListener('click', function () {
-                    if (isTriggerActive) {
-                        console.log("Trigger is already active. Please reset before arming again.");
-                        return; // Prevent multiple activations
+                    // Get the script key to identify this row
+                    const scriptKey = button.closest('tr').querySelector('.subscribe-btn')?.getAttribute('data-script') || 
+                                     button.closest('tr').id?.replace('row-', '');
+                    
+                    // Check if this specific trigger is already armed
+                    if (pollingIntervals.has(scriptKey)) {
+                        console.log("Trigger is already armed for this row.");
+                        return; // Prevent duplicate arming for same row
                     }
 
                     let triggerValue;
@@ -4369,7 +4551,6 @@
                     // Start blinking effect
                     const armButton = button;
                     armButton.classList.add('active-trigger');
-                    isTriggerActive = true; // Set trigger as active
 
                     // Live update of trigger value (only for fixed value)
                     if (triggerValueSource === 'fixed') {
@@ -4380,7 +4561,7 @@
                     }
 
                     // Check LTP continuously until triggered or reset
-                    pollingInterval = setInterval(() => {
+                    const intervalId = setInterval(() => {
                         const ltpText = button.closest('tr').querySelector('td:nth-child(3)').innerText.replace(/,/g, '');
                         const ltp = parseFloat(ltpText);
 
@@ -4479,35 +4660,95 @@
                             orderPlaced = true;
 
                             // Immediately stop the polling and disarm the trigger to prevent multiple orders
-                            clearInterval(pollingInterval);
+                            clearInterval(intervalId);
+                            pollingIntervals.delete(scriptKey);
                             armButton.classList.remove('active-trigger');
                             button.closest('td').querySelector('.trigger-type').value = 'no_trigger';
-                            isTriggerActive = false;
 
                             const quantity = parseFloat(button.closest('tr').querySelector('.qty-input').value);
                             const side = triggerType.includes('buy') ? 'B' : 'S';
-                            const scriptKey = button.closest('tr').querySelector('.subscribe-btn').getAttribute('data-script');
+                            const telegramOnly = button.closest('td').querySelector('.telegram-only-trigger').checked;
 
                             // Play beep sound first - immediately
                             playBeep();
 
-                            if (isCustomTrigger) {
-                                updateRealtimeStatus(`Placing order: ${side === 'B' ? 'Buy' : 'Sell'}, Quantity: ${quantity}, Custom Trigger Type: ${triggerType}`, 'order');
-                            } else {
-                                updateRealtimeStatus(`Placing order: ${side === 'B' ? 'Buy' : 'Sell'}, Quantity: ${quantity}`, 'order');
-                            }
-
-                            placeOrder(side, scriptKey, quantity.toString())
-                                .then(() => {
-                                    // Order placed successfully - we've already disarmed the trigger
-                                    updateRealtimeStatus(`Order placed successfully. Trigger disarmed.`, 'success');
-                                })
-                                .catch(error => {
-                                    console.error('Order placement error:', error);
-                                    updateRealtimeStatus(`Order failed: ${error}. Trigger has been disarmed.`, 'error');
+                            if (telegramOnly) {
+                                // Send Telegram alert only - no broker order
+                                const script = subscribedScripts.get(scriptKey);
+                                const timestamp = new Date().toLocaleString('en-IN', {
+                                    timeZone: 'Asia/Kolkata',
+                                    dateStyle: 'medium',
+                                    timeStyle: 'medium'
                                 });
+
+                                const message = `🎯 *TRIGGER ALERT HIT!*\n\n` +
+                                    `*Symbol:* ${script?.tsym || 'Unknown'}\n` +
+                                    `*Exchange:* ${script?.exch || 'Unknown'}\n` +
+                                    `*Trigger Type:* ${triggerType.replace(/_/g, ' ').toUpperCase()}\n` +
+                                    `*Direction:* ${side === 'B' ? 'BUY' : 'SELL'}\n` +
+                                    `*Quantity:* ${quantity}\n` +
+                                    `*Current LTP:* ₹${ltp.toFixed(2)}\n` +
+                                    `*Time:* ${timestamp}\n\n` +
+                                    `✅ Trigger condition met!`;
+
+                                // Send Telegram notification
+                                const credentials = getCredentials();
+                                const chatId = credentials.telegramChatId;
+
+                                if (chatId) {
+                                    const botToken = '5511964084:AAHV7mNKO35XLcNcEpnt4Pm_bfWF7yNag4k';
+                                    const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.open("POST", telegramApiUrl, true);
+                                    xhr.setRequestHeader("Content-Type", "application/json");
+
+                                    xhr.onload = function () {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            updateRealtimeStatus(`✅ Telegram alert sent for ${script?.tsym} trigger hit`, 'success');
+                                        } else {
+                                            updateRealtimeStatus(`❌ Failed to send Telegram alert for ${script?.tsym}`, 'error');
+                                        }
+                                    };
+
+                                    xhr.onerror = function () {
+                                        updateRealtimeStatus(`❌ Network error sending Telegram alert for ${script?.tsym}`, 'error');
+                                    };
+
+                                    xhr.send(JSON.stringify({
+                                        chat_id: chatId,
+                                        text: message,
+                                        parse_mode: 'Markdown'
+                                    }));
+                                } else {
+                                    updateRealtimeStatus(`⚠️ Trigger hit for ${script?.tsym} but no Telegram chat ID configured`, 'error');
+                                }
+
+                                updateRealtimeStatus(`🎯 TRIGGER ALERT: ${side === 'B' ? 'Buy' : 'Sell'} signal for ${script?.tsym} at ₹${ltp.toFixed(2)} (Telegram Alert Only)`, 'success');
+                            } else {
+                                // Place actual order via broker API
+                                if (isCustomTrigger) {
+                                    updateRealtimeStatus(`Placing order: ${side === 'B' ? 'Buy' : 'Sell'}, Quantity: ${quantity}, Custom Trigger Type: ${triggerType}`, 'order');
+                                } else {
+                                    updateRealtimeStatus(`Placing order: ${side === 'B' ? 'Buy' : 'Sell'}, Quantity: ${quantity}`, 'order');
+                                }
+
+                                placeOrder(side, scriptKey, quantity.toString())
+                                    .then(() => {
+                                        // Order placed successfully - we've already disarmed the trigger
+                                        updateRealtimeStatus(`Order placed successfully. Trigger disarmed.`, 'success');
+                                    })
+                                    .catch(error => {
+                                        console.error('Order placement error:', error);
+                                        updateRealtimeStatus(`Order failed: ${error}. Trigger has been disarmed.`, 'error');
+                                    });
+                            }
                         }
                     }, 1000); // Check every second
+                    
+                    // Store the interval ID for this row after setInterval is created
+                    pollingIntervals.set(scriptKey, intervalId);
+                    console.log(`Trigger armed for ${scriptKey}. Total armed: ${pollingIntervals.size}`);
                 });
             });
 
@@ -4515,9 +4756,17 @@
             tbody.querySelectorAll('.trigger-type').forEach(triggerSelect => {
                 triggerSelect.addEventListener('change', function () {
                     if (this.value === 'no_trigger') {
-                        clearInterval(pollingInterval); // Stop the polling
+                        // Get the script key for this row
+                        const row = this.closest('tr');
+                        const scriptKey = row?.querySelector('.subscribe-btn')?.getAttribute('data-script') || 
+                                         row?.id?.replace('row-', '');
+                        
+                        // Stop the polling for this specific row
+                        if (pollingIntervals.has(scriptKey)) {
+                            clearInterval(pollingIntervals.get(scriptKey));
+                            pollingIntervals.delete(scriptKey);
+                        }
                         this.closest('td').querySelector('.arm-trigger').classList.remove('active-trigger'); // Remove blinking effect
-                        isTriggerActive = false; // Reset trigger state
                         console.log("Trigger reset to initial state.");
                     }
                 });
@@ -4626,9 +4875,14 @@
             if (!armButton.hasEventListener) {
                 armButton.hasEventListener = true;
                 armButton.addEventListener('click', function () {
-                    if (isTriggerActive) {
-                        console.log("Trigger is already active. Please reset before arming again.");
-                        return; // Prevent multiple activations
+                    // Get the script key to identify this row
+                    const scriptKey = row.querySelector('.subscribe-btn')?.getAttribute('data-script') || 
+                                     row.id?.replace('row-', '');
+                    
+                    // Check if this specific trigger is already armed
+                    if (pollingIntervals.has(scriptKey)) {
+                        console.log("Trigger is already armed for this row.");
+                        return; // Prevent duplicate arming for same row
                     }
 
                     let triggerValue;
@@ -4687,7 +4941,6 @@
 
                     // Start blinking effect
                     armButton.classList.add('active-trigger');
-                    isTriggerActive = true; // Set trigger as active
 
                     // Live update of trigger value (only for fixed value)
                     if (triggerValueSource === 'fixed') {
@@ -4698,7 +4951,7 @@
                     }
 
                     // Check LTP continuously until triggered or reset
-                    pollingInterval = setInterval(() => {
+                    const intervalId = setInterval(() => {
                         const ltpText = row.querySelector('td:nth-child(3)').innerText.replace(/,/g, '');
                         const ltp = parseFloat(ltpText);
 
@@ -4761,14 +5014,13 @@
                             orderPlaced = true;
 
                             // Immediately stop the polling and disarm the trigger to prevent multiple orders
-                            clearInterval(pollingInterval);
+                            clearInterval(intervalId);
+                            pollingIntervals.delete(scriptKey);
                             armButton.classList.remove('active-trigger');
                             row.querySelector('.trigger-type').value = 'no_trigger';
-                            isTriggerActive = false;
 
                             const quantity = parseFloat(row.querySelector('.qty-input').value);
                             const side = triggerType.includes('buy') ? 'B' : 'S';
-                            const scriptKey = row.querySelector('.subscribe-btn').getAttribute('data-script');
 
                             // Play beep sound first - immediately
                             playBeep();
@@ -4790,6 +5042,10 @@
                                 });
                         }
                     }, 1000); // Check every second
+                    
+                    // Store the interval ID for this row after setInterval is created
+                    pollingIntervals.set(scriptKey, intervalId);
+                    console.log(`Trigger armed for ${scriptKey}. Total armed: ${pollingIntervals.size}`);
                 });
             }
         }
@@ -4977,14 +5233,134 @@
 
                     // Update UI only if no more pending triggers exist
                     if (pendingEntryTriggers.size === 0) {
-                        document.getElementById('activeTriggerStatus').innerHTML = 'None';
-                        document.getElementById('activeTriggerStatus').style.color = '';
+                        const statusEl = document.getElementById('activeTriggerStatus');
+                        statusEl.innerHTML = 'None';
+                        statusEl.classList.remove('waiting');
                         document.getElementById('stopTriggerBtn').disabled = true;
                     }
                     // Potentially update status for the specific symbol if needed in future
                 }
+
+                // Update the active triggers display
+                renderActiveTriggers();
             };
             // --- End Cancel Function ---
+
+            // --- Active Triggers Display Functions ---
+            let triggerTimerInterval = null;
+
+            const formatTimeRemaining = (endTime) => {
+                const now = Date.now();
+                const remaining = endTime - now;
+                if (remaining <= 0) return 'Expired';
+
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+            };
+
+            const renderActiveTriggers = () => {
+                const container = document.getElementById('activeTriggersList');
+
+                if (pendingEntryTriggers.size === 0) {
+                    container.innerHTML = '<div class="no-triggers-message">No active triggers</div>';
+                    return;
+                }
+
+                const now = Date.now();
+                let html = `
+                    <div class="trigger-count-header">
+                        <span>Active Triggers</span>
+                        <span class="trigger-count-badge">${pendingEntryTriggers.size}</span>
+                    </div>
+                `;
+
+                pendingEntryTriggers.forEach((triggerInfo, triggerId) => {
+                    const { params, timeoutHandle, createdAt, expiresAt } = triggerInfo;
+                    const symbol = params.symbol.split('|')[0];
+                    const direction = params.direction;
+                    const triggerType = params.triggerType;
+                    const triggerValue = params.triggerValue;
+                    const timeoutMinutes = params.timeoutMinutes || 5;
+
+                    // Calculate remaining time
+                    const remainingTime = expiresAt ? formatTimeRemaining(expiresAt) : `${timeoutMinutes}m`;
+                    const isExpiringSoon = expiresAt && (expiresAt - now) < 60000; // Less than 1 minute
+
+                    html += `
+                        <div class="trigger-card ${direction === 'BUY' ? 'buy-trigger' : 'sell-trigger'}" data-trigger-id="${triggerId}">
+                            <div class="trigger-header">
+                                <span class="trigger-symbol">${symbol}</span>
+                                <span class="trigger-type-badge">${triggerType.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div class="trigger-details">
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">Direction:</span>
+                                    <span class="trigger-detail-value">${direction}</span>
+                                </div>
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">Trigger Value:</span>
+                                    <span class="trigger-detail-value">${triggerValue || 'N/A'}</span>
+                                </div>
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">Quantity:</span>
+                                    <span class="trigger-detail-value">${params.quantity}</span>
+                                </div>
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">ID:</span>
+                                    <span class="trigger-detail-value">#${triggerId}</span>
+                                </div>
+                            </div>
+                            <div class="trigger-timer ${isExpiringSoon ? 'expiring-soon' : ''}">
+                                ⏱️ ${remainingTime}
+                            </div>
+                            <div class="trigger-actions">
+                                <button class="trigger-cancel-btn" onclick="OrderSystem.cancelTrigger(${triggerId})">
+                                    ❌ Cancel
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            };
+
+            const updateTriggerTimers = () => {
+                if (pendingEntryTriggers.size === 0) return;
+
+                const now = Date.now();
+                pendingEntryTriggers.forEach((triggerInfo, triggerId) => {
+                    const { expiresAt } = triggerInfo;
+                    if (expiresAt) {
+                        const card = document.querySelector(`[data-trigger-id="${triggerId}"] .trigger-timer`);
+                        if (card) {
+                            const remaining = formatTimeRemaining(expiresAt);
+                            card.textContent = `⏱️ ${remaining}`;
+
+                            // Add expiring soon class if less than 1 minute
+                            if (expiresAt - now < 60000) {
+                                card.classList.add('expiring-soon');
+                            }
+                        }
+                    }
+                });
+            };
+
+            // Start timer update interval
+            const startTriggerTimerUpdates = () => {
+                if (triggerTimerInterval) clearInterval(triggerTimerInterval);
+                triggerTimerInterval = setInterval(updateTriggerTimers, 1000);
+            };
+
+            // Stop timer update interval
+            const stopTriggerTimerUpdates = () => {
+                if (triggerTimerInterval) {
+                    clearInterval(triggerTimerInterval);
+                    triggerTimerInterval = null;
+                }
+            };
+            // --- End Active Triggers Display Functions ---
 
             // --- Define placeExternalOrder HERE, before it's called ---
             async function placeExternalOrder(params) {
@@ -5066,14 +5442,20 @@
                         // UI update for active trigger status handled by cancelPendingTrigger called implicitly or explicitly before
                         // Check if UI needs update after successful execution
                         if (pendingEntryTriggers.size === 0) {
-                            document.getElementById('activeTriggerStatus').innerHTML = 'None';
-                            document.getElementById('activeTriggerStatus').style.color = '';
+                            const statusEl = document.getElementById('activeTriggerStatus');
+                            statusEl.innerHTML = 'None';
+                            statusEl.classList.remove('waiting');
                             document.getElementById('stopTriggerBtn').disabled = true;
+                            stopTriggerTimerUpdates(); // Stop timer updates
                         } else {
                             // Optional: Update status if other triggers are pending
                             const remainingSymbols = [...pendingEntryTriggers.values()].map(p => p.params.symbol.split('|')[0]);
-                            document.getElementById('activeTriggerStatus').innerHTML = `Waiting: ${[...new Set(remainingSymbols)].join(', ')}`;
+                            const statusEl = document.getElementById('activeTriggerStatus');
+                            statusEl.innerHTML = `Waiting: ${[...new Set(remainingSymbols)].join(', ')}`;
+                            statusEl.classList.add('waiting');
                         }
+                        // Update active triggers display
+                        renderActiveTriggers();
                     } catch (error) {
                         debugLog(`❌ Order execution failed for triggered #${triggerId}: ${error.message}`, 'error');
                         // Decide if trigger should be re-armed or just logged
@@ -5494,15 +5876,24 @@
                             cancelPendingTrigger(triggerId, `Timeout (${timeoutMinutes} min)`);
                         }, timeoutMs);
 
-                        pendingEntryTriggers.set(triggerId, { params, timeoutHandle });
+                        // Store trigger with timestamps for countdown
+                        const createdAt = Date.now();
+                        const expiresAt = createdAt + timeoutMs;
+                        params.timeoutMinutes = timeoutMinutes; // Store for display
+
+                        pendingEntryTriggers.set(triggerId, { params, timeoutHandle, createdAt, expiresAt });
                         debugLog(`⏳ Pending entry trigger #${triggerId} registered for ${params.symbol} with ${timeoutMinutes} min timeout.`, 'info');
 
                         // --- Update UI --- 
                         const activeTriggerStatus = document.getElementById('activeTriggerStatus');
                         const symbolsWaiting = [...pendingEntryTriggers.values()].map(p => p.params.symbol.split('|')[0]);
                         activeTriggerStatus.innerHTML = `Waiting: ${[...new Set(symbolsWaiting)].join(', ')}`;
-                        activeTriggerStatus.style.color = '#ff9800'; // Orange color for waiting
+                        activeTriggerStatus.classList.add('waiting');
                         document.getElementById('stopTriggerBtn').disabled = false;
+
+                        // Update active triggers display and start timer
+                        renderActiveTriggers();
+                        startTriggerTimerUpdates();
 
                     } catch (error) {
                         debugLog(`Order placement/trigger setup failed: ${error.message}`, 'error');
@@ -5680,12 +6071,25 @@
 
                     // Ensure UI is fully reset even if there were no triggers initially
                     if (pendingEntryTriggers.size === 0) { // Double check size after cancellation
-                        document.getElementById('activeTriggerStatus').innerHTML = 'None';
-                        document.getElementById('activeTriggerStatus').style.color = '';
+                        const statusEl = document.getElementById('activeTriggerStatus');
+                        statusEl.innerHTML = 'None';
+                        statusEl.classList.remove('waiting');
                         document.getElementById('stopTriggerBtn').disabled = true;
+                        stopTriggerTimerUpdates(); // Stop timer updates
+                        renderActiveTriggers(); // Clear display
                     }
 
                     debugLog('✅ All pending entry triggers stopped.', 'success');
+                },
+
+                // Cancel individual trigger (exposed for UI)
+                cancelTrigger(triggerId) {
+                    cancelPendingTrigger(triggerId, 'User Cancelled');
+
+                    // Stop timer if no more triggers
+                    if (pendingEntryTriggers.size === 0) {
+                        stopTriggerTimerUpdates();
+                    }
                 },
 
                 // Expose the trigger checking function
