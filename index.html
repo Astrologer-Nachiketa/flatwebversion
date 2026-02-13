@@ -120,11 +120,50 @@
 
         /* Search Section */
         #searchInput {
-            width: calc(50% - 100px);
-            padding: 8px;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
+            width: 140px;
+            padding: 8px 12px;
             font-size: 14px;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #searchInput:focus {
+            border-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+            background: linear-gradient(135deg, #d1e8ff 0%, #e8f4ff 100%);
+        }
+
+        #searchInput::placeholder {
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        .search-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 123, 255, 0.3);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .search-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
         }
 
         #searchResults {
@@ -2152,8 +2191,10 @@
             }
 
             #searchInput {
-                /* Make search wider on mobile */
-                width: calc(100% - 100px);
+                /* Search input on mobile */
+                width: calc(50% - 50px);
+                padding: 8px 10px;
+                font-size: 14px;
             }
 
             /* Stack Algo columns */
@@ -2980,6 +3021,85 @@
         .verification-status.error {
             color: #dc3545;
         }
+
+        /* Paper Trading Mode Toggle Styles */
+        .trading-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .trading-mode-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity 0.2s;
+        }
+
+        .trading-mode-toggle label.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .trading-mode-toggle input[type="radio"] {
+            cursor: pointer;
+        }
+
+        .trading-mode-toggle input[type="radio"]:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Paper Trades Tab Styles */
+        #paperTrades .order-table th {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        #paperTrades h3 {
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #paperTrades h3::before {
+            content: '📝';
+        }
+
+        .paper-trade-badge {
+            background: #2196f3;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* Active mode indicator */
+        .mode-indicator {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .mode-indicator.paper {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #90caf9;
+        }
+
+        .mode-indicator.real {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
     </style>
 </head>
 
@@ -3001,7 +3121,7 @@
         <input type="text" id="signalUrlInput" class="cred-input" placeholder="Signal URL (Upcoming)">
         <!-- Added Signal URL Input -->
         <button onclick="saveCredentials()">Save Credentials</button>
-        <a href="https://script.google.com/macros/s/AKfycbx-XLQJ0PNH6LMr8De_k5ddMjkuQG2cA2U7dbY1_AqSjRQVpyXLbzS5KvamREt1Lajt/exec?"
+        <a href="https://script.google.com/macros/s/AKfycbxXcEUWUt5M1qiqlZPuOu9cvyGNFOYdBH7au26UvcPb5nyMkvx1QfDkPoqvYPKlNjpt/exec?"
             target="_blank"
             style="background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-left: 5px; padding: 8px 16px; display: inline-block;">
             Generate Token
@@ -3017,6 +3137,21 @@
         <button onclick="disconnectWS()">Disconnect</button>
         <span id="status" class="status disconnected">Disconnected</span>
 
+        <!-- Trading Mode Toggle -->
+        <div class="trading-mode-toggle" style="margin-left: 20px;">
+            <label id="paperTradeLabel">
+                <input type="radio" id="paperTradeToggle" name="tradingMode" value="paper" checked
+                    onchange="toggleTradingMode('paper')">
+                <span>Paper Trading</span>
+            </label>
+            <span id="modeIndicator" class="mode-indicator paper">PAPER MODE</span>
+            <label id="realTradeLabel" class="disabled">
+                <input type="radio" id="realTradeToggle" name="tradingMode" value="real"
+                    onchange="toggleTradingMode('real')">
+                <span>Real Trading</span>
+            </label>
+        </div>
+
         <div style="margin-top: 10px;">
             <button class="exchange-btn" onclick="selectExchange('NSE')">NSE</button>
             <button class="exchange-btn" onclick="selectExchange('NFO')">NFO</button>
@@ -3026,9 +3161,9 @@
                 onchange="updateGlobalQty()" />
         </div>
 
-        <div style="margin-top: 10px;">
-            <input type="text" id="searchInput" placeholder="Search Symbol">
-            <button onclick="searchSymbol()">Search</button>
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+            <input type="text" id="searchInput" placeholder="Symbol">
+            <button onclick="searchSymbol()" class="search-btn">Search</button>
 
             <label for="historicalPeriod" style="margin-left: 15px; font-weight: 500; margin-right: 5px;">Hist.
                 Period:</label>
@@ -3082,6 +3217,7 @@
     <div class="algo-section">
         <div class="tab-bar">
             <button class="tab-btn active" onclick="showTab('orderBook')">Order Book</button>
+            <button class="tab-btn" onclick="showTab('paperTrades')">Paper Trades</button>
             <button class="tab-btn" onclick="showTab('marketDepth')">Market Depth</button>
             <button class="tab-btn" onclick="showTab('algo')">Algo Trading</button>
         </div>
@@ -3106,6 +3242,45 @@
                 </thead>
                 <tbody id="orderBody"></tbody>
             </table>
+        </div>
+
+        <!-- Paper Trades Tab -->
+        <div id="paperTrades" class="tab-content">
+            <h3>Paper Trades</h3>
+            <div
+                style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #666;">Simulated trades for practice (no real money)</span>
+                <button onclick="clearPaperTrades()" class="refresh-btn" style="background: #dc3545;">Clear All</button>
+            </div>
+            <div id="paperTradeStatus"></div>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Order No</th>
+                        <th>Symbol</th>
+                        <th>Side</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="paperTradesBody"></tbody>
+            </table>
+            <div id="paperTradesSummary"
+                style="margin-top: 10px; padding: 15px; background: #e3f2fd; border-radius: 6px; font-size: 14px; border: 2px solid #2196f3;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div><strong style="color: #1976d2;">Realized P&L:</strong> <span id="realizedPaperPnL"
+                            style="font-weight: bold;">0.00</span></div>
+                    <div><strong style="color: #1976d2;">Unrealized P&L:</strong> <span id="unrealizedPaperPnL"
+                            style="font-weight: bold;">0.00</span></div>
+                    <div style="font-size: 16px;"><strong style="color: #1976d2;">Total P&L:</strong> <span
+                            id="totalPaperPnL" style="font-weight: bold; font-size: 18px;">0.00</span></div>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Auto-updates with market
+                    ticks</div>
+            </div>
         </div>
 
         <!-- Market Depth Tab -->
@@ -4081,6 +4256,9 @@
             // Update table row
             updateTableRow(scriptKey);
 
+            // Refresh paper trades P&L with new market prices
+            refreshPaperTradesPnL();
+
             // --- Check Active Algo Triggers on LTP update --- 
             if (!isNaN(ltp)) {
                 OrderSystem.updateMarketPrice(scriptKey, ltp); // Update price for bracket orders
@@ -4225,6 +4403,10 @@
             return ema;
         }
 
+        // Paper Trades Storage
+        let paperTrades = [];
+        let paperTradeCounter = 1;
+
         // Trading Functions
         async function placeOrder(side, scriptKey, quantity) {
             const script = subscribedScripts.get(scriptKey);
@@ -4233,6 +4415,12 @@
                 return;
             }
 
+            // Check if we're in paper trading mode
+            if (isPaperTradingMode) {
+                return executePaperTrade(side, script, quantity);
+            }
+
+            // Real trading mode - proceed with actual API call
             const credentials = getCredentials();
             if (!credentials.uid || !credentials.jKey) {
                 alert('Please enter and save credentials first!');
@@ -4267,6 +4455,250 @@
             }
         }
 
+        // Execute Paper Trade (Simulated)
+        function executePaperTrade(side, script, quantity) {
+            const ltp = script.data?.lp || '0';
+            const orderNo = `PAPER-${Date.now()}-${paperTradeCounter++}`;
+
+            const paperTrade = {
+                orderNo: orderNo,
+                symbol: script.tsym,
+                exch: script.exch,
+                side: side,
+                quantity: parseInt(quantity),
+                price: parseFloat(ltp),
+                status: 'COMPLETE',
+                time: new Date().toLocaleTimeString(),
+                timestamp: Date.now(),
+                remarks: 'Paper Trade'
+            };
+
+            // Add to paper trades list
+            paperTrades.push(paperTrade);
+
+            // Show success message
+            showPaperTradeResult(paperTrade);
+
+            // Update paper trades display
+            updatePaperTradesDisplay();
+
+            // Simulate sending to Telegram
+            sendTradeToTelegram({
+                symbol: script.tsym,
+                price: ltp,
+                quantity: quantity,
+                orderType: side === 'B' ? 'BUY' : 'SELL',
+                orderId: orderNo,
+                timestamp: new Date().toISOString(),
+                isPaperTrade: true
+            });
+
+            console.log(`📝 Paper trade executed: ${side} ${quantity} ${script.tsym} @ ${ltp}`);
+
+            return {
+                stat: 'Ok',
+                norenordno: orderNo,
+                isPaperTrade: true
+            };
+        }
+
+        // Show Paper Trade Result
+        function showPaperTradeResult(trade) {
+            const statusDiv = document.getElementById('paperTradeStatus');
+            const message = `✅ PAPER ${trade.side === 'B' ? 'BUY' : 'SELL'} ${trade.quantity} ${trade.symbol} at ${trade.price} - Order ID: ${trade.orderNo}`;
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success blink';
+            successDiv.style.background = '#e3f2fd';
+            successDiv.style.borderColor = '#2196f3';
+            successDiv.style.color = '#1976d2';
+            successDiv.textContent = message;
+            statusDiv.innerHTML = '';
+            statusDiv.appendChild(successDiv);
+
+            // Remove blink effect after 5 seconds
+            setTimeout(() => {
+                successDiv.classList.remove('blink');
+            }, 5000);
+
+            playBeep();
+        }
+
+        // Update Paper Trades Display
+        function updatePaperTradesDisplay() {
+            const tbody = document.getElementById('paperTradesBody');
+            if (!tbody) return;
+
+            // Calculate running positions and P&L (supports both long and short)
+            const positionMap = {};
+            let runningPnL = 0;
+
+            // Process trades in chronological order to calculate P&L
+            paperTrades.forEach(trade => {
+                const symbol = trade.symbol;
+                if (!positionMap[symbol]) {
+                    positionMap[symbol] = { qty: 0, avgPrice: 0, realizedPnL: 0 };
+                }
+
+                const pos = positionMap[symbol];
+
+                if (trade.side === 'B') {
+                    // BUY order
+                    if (pos.qty < 0) {
+                        // We have a short position, this buy is closing part/all of it
+                        const closeQty = Math.min(trade.quantity, Math.abs(pos.qty));
+                        const tradePnL = closeQty * (pos.avgPrice - trade.price); // Short P&L = (sell price - buy price)
+                        pos.realizedPnL += tradePnL;
+                        runningPnL += tradePnL;
+
+                        // Update position
+                        pos.qty += trade.quantity;
+
+                        // If we closed the entire short and have leftover, start a long
+                        if (pos.qty > 0) {
+                            pos.avgPrice = trade.price; // New long position at this price
+                        } else if (pos.qty === 0) {
+                            pos.avgPrice = 0;
+                        }
+                    } else {
+                        // Adding to long position or starting fresh
+                        const totalValue = (pos.qty * pos.avgPrice) + (trade.quantity * trade.price);
+                        pos.qty += trade.quantity;
+                        pos.avgPrice = pos.qty > 0 ? totalValue / pos.qty : 0;
+                    }
+                } else {
+                    // SELL order
+                    if (pos.qty > 0) {
+                        // We have a long position, this sell is closing part/all of it
+                        const closeQty = Math.min(trade.quantity, pos.qty);
+                        const tradePnL = closeQty * (trade.price - pos.avgPrice); // Long P&L = (sell price - buy price)
+                        pos.realizedPnL += tradePnL;
+                        runningPnL += tradePnL;
+
+                        // Update position
+                        pos.qty -= trade.quantity;
+
+                        // If we closed the entire long and have leftover, start a short
+                        if (pos.qty < 0) {
+                            pos.avgPrice = trade.price; // New short position at this price
+                        } else if (pos.qty === 0) {
+                            pos.avgPrice = 0;
+                        }
+                    } else {
+                        // Adding to short position or starting fresh
+                        const totalValue = (Math.abs(pos.qty) * pos.avgPrice) + (trade.quantity * trade.price);
+                        pos.qty -= trade.quantity;
+                        pos.avgPrice = pos.qty < 0 ? totalValue / Math.abs(pos.qty) : 0;
+                    }
+                }
+            });
+
+            // Calculate unrealized P&L for open positions using current market price
+            let totalUnrealizedPnL = 0;
+            for (const [symbol, pos] of Object.entries(positionMap)) {
+                if (pos.qty !== 0) {
+                    const currentPrice = getCurrentMarketPrice(symbol);
+                    if (currentPrice > 0) {
+                        if (pos.qty > 0) {
+                            // Long position unrealized P&L
+                            totalUnrealizedPnL += pos.qty * (currentPrice - pos.avgPrice);
+                        } else {
+                            // Short position unrealized P&L
+                            totalUnrealizedPnL += Math.abs(pos.qty) * (pos.avgPrice - currentPrice);
+                        }
+                    }
+                }
+            }
+
+            // Display trades (no individual P&L, only summary at bottom)
+            tbody.innerHTML = paperTrades.slice().reverse().map((trade) => {
+                return `
+                    <tr>
+                        <td>${trade.orderNo}</td>
+                        <td>${trade.symbol}</td>
+                        <td style="color: ${trade.side === 'B' ? '#28a745' : '#dc3545'}; font-weight: 500;">${trade.side === 'B' ? 'BUY' : 'SELL'}</td>
+                        <td>${trade.quantity}</td>
+                        <td>${trade.price.toFixed(2)}</td>
+                        <td><span style="color: #28a745; font-weight: 500;">${trade.status}</span></td>
+                        <td>${trade.time}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update P&L summary elements
+            const totalPnL = runningPnL + totalUnrealizedPnL;
+
+            const realizedEl = document.getElementById('realizedPaperPnL');
+            const unrealizedEl = document.getElementById('unrealizedPaperPnL');
+            const totalEl = document.getElementById('totalPaperPnL');
+
+            if (realizedEl) {
+                realizedEl.textContent = (runningPnL >= 0 ? '+' : '') + runningPnL.toFixed(2);
+                realizedEl.style.color = runningPnL >= 0 ? '#28a745' : '#dc3545';
+            }
+
+            if (unrealizedEl) {
+                unrealizedEl.textContent = (totalUnrealizedPnL >= 0 ? '+' : '') + totalUnrealizedPnL.toFixed(2);
+                unrealizedEl.style.color = totalUnrealizedPnL >= 0 ? '#28a745' : '#dc3545';
+            }
+
+            if (totalEl) {
+                totalEl.textContent = (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2);
+                totalEl.style.color = totalPnL >= 0 ? '#28a745' : '#dc3545';
+            }
+        }
+
+        // Auto-refresh P&L on market data updates
+        function refreshPaperTradesPnL() {
+            if (paperTrades.length > 0) {
+                updatePaperTradesDisplay();
+            }
+        }
+
+        // Get current market price for a symbol
+        function getCurrentMarketPrice(symbol) {
+            // Look in subscribed scripts for current LTP
+            for (const [key, script] of subscribedScripts) {
+                if (script.tsym === symbol) {
+                    return parseFloat(script.data?.lp || 0);
+                }
+            }
+            return 0;
+        }
+
+        // Clear Paper Trades
+        function clearPaperTrades() {
+            if (confirm('Are you sure you want to clear all paper trades?')) {
+                paperTrades = [];
+                updatePaperTradesDisplay();
+                console.log('📝 Paper trades cleared');
+            }
+        }
+
+        // Load paper trades from localStorage on startup
+        function loadPaperTrades() {
+            const saved = localStorage.getItem('paperTrades');
+            if (saved) {
+                try {
+                    paperTrades = JSON.parse(saved);
+                    updatePaperTradesDisplay();
+                } catch (e) {
+                    console.error('Error loading paper trades:', e);
+                }
+            }
+        }
+
+        // Save paper trades to localStorage
+        function savePaperTrades() {
+            localStorage.setItem('paperTrades', JSON.stringify(paperTrades));
+        }
+
+        // Auto-save paper trades when updated
+        const originalUpdatePaperTradesDisplay = updatePaperTradesDisplay;
+        updatePaperTradesDisplay = function () {
+            originalUpdatePaperTradesDisplay();
+            savePaperTrades();
+        };
+
         function sellScript(scriptKey) {
             placeOrder('S', scriptKey);
         }
@@ -4289,7 +4721,7 @@
                     pollingIntervals.delete(scriptKey);
                     console.log(`Cleared armed trigger for ${scriptKey} during unsubscribe`);
                 }
-                
+
                 subscribedScripts.delete(scriptKey);
                 ws.send(JSON.stringify({ t: "u", k: scriptKey }));
                 console.log('Unsubscribed:', scriptKey);
@@ -4370,6 +4802,7 @@
             });
 
             const message = `🔔 *Trade Notification*\n\n` +
+                `${tradeData.isPaperTrade ? '📝 *PAPER TRADE* (Practice Mode)\n\n' : ''}` +
                 `*Symbol:* ${tradeData.symbol}\n` +
                 `*Order Type:* ${tradeData.orderType}\n` +
                 `*Quantity:* ${tradeData.quantity}\n` +
@@ -4485,9 +4918,9 @@
             tbody.querySelectorAll('.arm-trigger').forEach(button => {
                 button.addEventListener('click', function () {
                     // Get the script key to identify this row
-                    const scriptKey = button.closest('tr').querySelector('.subscribe-btn')?.getAttribute('data-script') || 
-                                     button.closest('tr').id?.replace('row-', '');
-                    
+                    const scriptKey = button.closest('tr').querySelector('.subscribe-btn')?.getAttribute('data-script') ||
+                        button.closest('tr').id?.replace('row-', '');
+
                     // Check if this specific trigger is already armed
                     if (pollingIntervals.has(scriptKey)) {
                         console.log("Trigger is already armed for this row.");
@@ -4745,7 +5178,7 @@
                             }
                         }
                     }, 1000); // Check every second
-                    
+
                     // Store the interval ID for this row after setInterval is created
                     pollingIntervals.set(scriptKey, intervalId);
                     console.log(`Trigger armed for ${scriptKey}. Total armed: ${pollingIntervals.size}`);
@@ -4758,9 +5191,9 @@
                     if (this.value === 'no_trigger') {
                         // Get the script key for this row
                         const row = this.closest('tr');
-                        const scriptKey = row?.querySelector('.subscribe-btn')?.getAttribute('data-script') || 
-                                         row?.id?.replace('row-', '');
-                        
+                        const scriptKey = row?.querySelector('.subscribe-btn')?.getAttribute('data-script') ||
+                            row?.id?.replace('row-', '');
+
                         // Stop the polling for this specific row
                         if (pollingIntervals.has(scriptKey)) {
                             clearInterval(pollingIntervals.get(scriptKey));
@@ -4876,9 +5309,9 @@
                 armButton.hasEventListener = true;
                 armButton.addEventListener('click', function () {
                     // Get the script key to identify this row
-                    const scriptKey = row.querySelector('.subscribe-btn')?.getAttribute('data-script') || 
-                                     row.id?.replace('row-', '');
-                    
+                    const scriptKey = row.querySelector('.subscribe-btn')?.getAttribute('data-script') ||
+                        row.id?.replace('row-', '');
+
                     // Check if this specific trigger is already armed
                     if (pollingIntervals.has(scriptKey)) {
                         console.log("Trigger is already armed for this row.");
@@ -5042,7 +5475,7 @@
                                 });
                         }
                     }, 1000); // Check every second
-                    
+
                     // Store the interval ID for this row after setInterval is created
                     pollingIntervals.set(scriptKey, intervalId);
                     console.log(`Trigger armed for ${scriptKey}. Total armed: ${pollingIntervals.size}`);
@@ -8227,6 +8660,12 @@
         // User ID Verification Functions
         let verificationTimeout;
         let isVerified = false;
+        let userPermissions = {
+            papertrade: false,
+            realtrade: false,
+            userid: ''
+        };
+        let isPaperTradingMode = true; // Default to paper trading
 
         // Debounce function to limit API calls
         function debounce(func, wait) {
@@ -8249,20 +8688,46 @@
             }
 
             try {
-                const response = await fetch(`https://script.google.com/macros/s/AKfycbx-XLQJ0PNH6LMr8De_k5ddMjkuQG2cA2U7dbY1_AqSjRQVpyXLbzS5KvamREt1Lajt/exec?userid=${encodeURIComponent(userId)}`);
+                // Updated URL for new authentication system
+                const response = await fetch(`https://script.google.com/macros/s/AKfycbxXcEUWUt5M1qiqlZPuOu9cvyGNFOYdBH7au26UvcPb5nyMkvx1QfDkPoqvYPKlNjpt/exec?userid=${encodeURIComponent(userId)}`);
                 const data = await response.json();
 
+                // Store user permissions from response
+                userPermissions = {
+                    userid: data.userid || '',
+                    papertrade: data.papertrade === true,
+                    realtrade: data.realtrade === true
+                };
+
                 if (data && data.match === true) {
-                    // User is authorized - show token field
-                    showTokenField();
-                    hideUnauthorizedMessage();
-                    isVerified = true;
-                    console.log('✅ User ID verified successfully');
+                    // Check if user has any trading permissions
+                    if (userPermissions.papertrade || userPermissions.realtrade) {
+                        // User has trading permissions - show token field
+                        showTokenField();
+                        hideUnauthorizedMessage();
+                        isVerified = true;
+                        console.log('✅ User ID verified successfully');
+                        console.log(`📋 Permissions - Paper Trading: ${userPermissions.papertrade}, Real Trading: ${userPermissions.realtrade}`);
+
+                        // Update UI based on permissions
+                        updateTradingModeUI();
+                    } else {
+                        // Restricted access - user can view but not trade
+                        showTokenField();
+                        hideUnauthorizedMessage();
+                        isVerified = true;
+                        console.log('✅ User ID verified (View Only Mode)');
+                        console.log('⚠️ No trading permissions granted');
+
+                        // Disable trading buttons
+                        disableTradingButtons();
+                    }
                 } else {
                     // User is not authorized - hide token field and show popup
                     hideTokenField();
                     showUnauthorizedMessage();
                     isVerified = false;
+                    userPermissions = { papertrade: false, realtrade: false, userid: '' };
                     console.log('❌ User ID not authorized');
                     // Show contact popup after a short delay
                     setTimeout(() => {
@@ -8275,7 +8740,134 @@
                 hideTokenField();
                 showUnauthorizedMessage();
                 isVerified = false;
+                userPermissions = { papertrade: false, realtrade: false, userid: '' };
             }
+        }
+
+        // Update trading mode UI based on permissions
+        function updateTradingModeUI() {
+            const paperTradeToggle = document.getElementById('paperTradeToggle');
+            const realTradeToggle = document.getElementById('realTradeToggle');
+            const paperTradeLabel = document.getElementById('paperTradeLabel');
+            const realTradeLabel = document.getElementById('realTradeLabel');
+
+            if (paperTradeToggle) {
+                paperTradeToggle.disabled = !userPermissions.papertrade;
+                if (paperTradeLabel) {
+                    paperTradeLabel.classList.toggle('disabled', !userPermissions.papertrade);
+                }
+                if (userPermissions.papertrade && !userPermissions.realtrade) {
+                    isPaperTradingMode = true;
+                    paperTradeToggle.checked = true;
+                }
+            }
+
+            if (realTradeToggle) {
+                realTradeToggle.disabled = !userPermissions.realtrade;
+                if (realTradeLabel) {
+                    realTradeLabel.classList.toggle('disabled', !userPermissions.realtrade);
+                }
+            }
+
+            // Update mode indicator
+            const modeIndicator = document.getElementById('modeIndicator');
+            if (modeIndicator) {
+                if (isPaperTradingMode) {
+                    modeIndicator.textContent = 'PAPER MODE';
+                    modeIndicator.className = 'mode-indicator paper';
+                } else {
+                    modeIndicator.textContent = 'REAL MODE';
+                    modeIndicator.className = 'mode-indicator real';
+                }
+            }
+
+            // Update trading buttons state
+            updateTradingButtonsState();
+        }
+
+        // Disable trading buttons for view-only users
+        function disableTradingButtons() {
+            const buyBtns = document.querySelectorAll('.buy-btn');
+            const sellBtns = document.querySelectorAll('.sell-btn');
+
+            buyBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.title = 'Trading not authorized';
+            });
+
+            sellBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.title = 'Trading not authorized';
+            });
+
+            // Disable trading mode toggles
+            const paperTradeToggle = document.getElementById('paperTradeToggle');
+            const realTradeToggle = document.getElementById('realTradeToggle');
+            if (paperTradeToggle) paperTradeToggle.disabled = true;
+            if (realTradeToggle) realTradeToggle.disabled = true;
+        }
+
+        // Update trading buttons based on mode
+        function updateTradingButtonsState() {
+            const canTrade = isVerified && (userPermissions.papertrade || userPermissions.realtrade);
+
+            const buyBtns = document.querySelectorAll('.buy-btn');
+            const sellBtns = document.querySelectorAll('.sell-btn');
+
+            buyBtns.forEach(btn => {
+                btn.disabled = !canTrade;
+            });
+
+            sellBtns.forEach(btn => {
+                btn.disabled = !canTrade;
+            });
+        }
+
+        // Toggle between paper and real trading modes
+        function toggleTradingMode(mode) {
+            if (mode === 'paper' && !userPermissions.papertrade) {
+                alert('Paper trading not authorized for your account');
+                return;
+            }
+            if (mode === 'real' && !userPermissions.realtrade) {
+                alert('Real trading not authorized for your account');
+                return;
+            }
+
+            // Safety confirmation when switching to real mode
+            if (mode === 'real' && isPaperTradingMode) {
+                if (!confirm('⚠️ WARNING: You are about to switch to REAL TRADING mode.\n\nOrders placed will use REAL MONEY.\n\nAre you sure you want to continue?')) {
+                    // Revert the toggle
+                    const paperTradeToggle = document.getElementById('paperTradeToggle');
+                    if (paperTradeToggle) paperTradeToggle.checked = true;
+                    return;
+                }
+            }
+
+            isPaperTradingMode = (mode === 'paper');
+            console.log(`🔄 Trading mode switched to: ${isPaperTradingMode ? 'Paper' : 'Real'}`);
+
+            // Update UI
+            const paperTradeToggle = document.getElementById('paperTradeToggle');
+            const realTradeToggle = document.getElementById('realTradeToggle');
+            const modeIndicator = document.getElementById('modeIndicator');
+
+            if (paperTradeToggle) paperTradeToggle.checked = isPaperTradingMode;
+            if (realTradeToggle) realTradeToggle.checked = !isPaperTradingMode;
+
+            // Update mode indicator
+            if (modeIndicator) {
+                if (isPaperTradingMode) {
+                    modeIndicator.textContent = 'PAPER MODE';
+                    modeIndicator.className = 'mode-indicator paper';
+                } else {
+                    modeIndicator.textContent = 'REAL MODE';
+                    modeIndicator.className = 'mode-indicator real';
+                }
+            }
+
+            // Show notification
+            updateRealtimeStatus(`Switched to ${isPaperTradingMode ? 'PAPER' : 'REAL'} trading mode`, 'info');
         }
 
         // Show token field
@@ -8392,6 +8984,17 @@
             if (savedUid) {
                 verifyUserId(savedUid);
             }
+
+            // Load paper trades from localStorage
+            loadPaperTrades();
+            console.log('📝 Paper trading system initialized');
+
+            // Periodic refresh of paper trades P&L (every 2 seconds to keep unrealized P&L current)
+            setInterval(() => {
+                if (paperTrades.length > 0) {
+                    refreshPaperTradesPnL();
+                }
+            }, 2000);
         });
     </script>
 
