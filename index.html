@@ -3135,7 +3135,6 @@
         /* Tooltip Styles */
         [data-tooltip] {
             position: relative;
-            cursor: help;
         }
 
         [data-tooltip]::before {
@@ -3144,21 +3143,25 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            padding: 8px 12px;
-            background: rgba(33, 33, 33, 0.95);
+            padding: 10px 14px;
+            background: rgba(33, 33, 33, 0.98);
             color: white;
-            font-size: 12px;
-            border-radius: 6px;
-            white-space: pre-wrap;
-            max-width: 300px;
-            width: max-content;
+            font-size: 13px;
+            border-radius: 8px;
+            white-space: pre-line;
+            max-width: 350px;
+            min-width: 150px;
+            width: auto;
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            line-height: 1.4;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            line-height: 1.5;
             pointer-events: none;
+            text-align: left;
+            word-wrap: break-word;
+            margin-bottom: 8px;
         }
 
         [data-tooltip]::after {
@@ -3167,9 +3170,9 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: rgba(33, 33, 33, 0.95);
-            margin-bottom: -12px;
+            border: 8px solid transparent;
+            border-top-color: rgba(33, 33, 33, 0.98);
+            margin-bottom: -8px;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
@@ -3262,8 +3265,7 @@
         <input type="text" id="signalUrlInput" class="cred-input" placeholder="Signal URL (Upcoming)">
         <!-- Added Signal URL Input -->
         <button onclick="saveCredentials()">Save Credentials</button>
-        <a href="https://sharkscalper.onrender.com/"
-            target="_blank"
+        <a href="https://sharkscalper.onrender.com/" target="_blank"
             style="background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-left: 5px; padding: 8px 16px; display: inline-block;">
             Register ShaekWebScalper
         </a>
@@ -3657,7 +3659,8 @@
 
                         <div class="input-group">
                             <label class="algo-label">Repeat (on SL)</label>
-                            <input type="number" id="repeatCount" class="algo-input" min="0" value="0" style="width: 60px;" title="Number of times to re-trigger on SL hit. 0 = No repeat.">
+                            <input type="number" id="repeatCount" class="algo-input" min="0" value="0"
+                                style="width: 60px;" title="Number of times to re-trigger on SL hit. 0 = No repeat.">
                         </div>
 
                         <div class="input-group">
@@ -5873,7 +5876,7 @@
 
                     // Helper to format trigger type display
                     const formatTriggerType = (type) => type ? type.replace(/_/g, ' ').toUpperCase() : 'N/A';
-                    
+
                     // Helper to format trigger value display
                     const formatTriggerValue = (value, source) => {
                         if (source && source !== 'fixed') return `[${source.toUpperCase()}]`;
@@ -6271,7 +6274,7 @@
                         const result = await placeOrder(exitSide, scriptKey, this.quantity.toString());
                         if (result && result.stat === 'Ok') {
                             debugLog(`Exit order executed successfully: ${result.norenordno}`, 'success');
-                            
+
                             // Handle repeat logic on SL hit
                             if (reason === "SL_TRIGGERED" && this.repeatCount > 0) {
                                 const newRepeatCount = this.repeatCount - 1;
@@ -6286,7 +6289,7 @@
                                     OrderSystem.cancelPendingRepeats(this.chainId);
                                 }
                             }
-                            
+
                             // Update the display immediately after successful exit
                             OrderSystem.updateDisplay();
                         } else {
@@ -6773,14 +6776,14 @@
                 // Cancel all pending triggers for a specific chain
                 cancelPendingRepeats(chainId) {
                     if (!chainId) return;
-                    
+
                     const triggersToCancel = [];
                     pendingEntryTriggers.forEach((triggerInfo, triggerId) => {
                         if (triggerInfo.params.chainId === chainId) {
                             triggersToCancel.push(triggerId);
                         }
                     });
-                    
+
                     if (triggersToCancel.length > 0) {
                         triggersToCancel.forEach(triggerId => {
                             cancelPendingTrigger(triggerId, 'Chain Cancelled');
@@ -9270,7 +9273,7 @@
 
         // ==================== TOOLTIP SYSTEM ====================
         let tooltipConfig = null;
-        
+
         // Load tooltip configuration from JSON file
         async function loadTooltipConfig() {
             try {
@@ -9316,10 +9319,10 @@
                 'jKey': 'credentials.jKey',
                 'telegramChatId': 'credentials.telegramChatId',
                 'signalUrl': 'credentials.signalUrl',
-                
+
                 // Search
                 'searchInput': 'search.searchInput',
-                
+
                 // Algo Trading
                 'symbol': 'algoTrading.symbol',
                 'direction': 'algoTrading.direction',
@@ -9345,7 +9348,7 @@
                 'modifyTarget': 'algoTrading.modifyTarget',
                 'modifySL': 'algoTrading.modifySL',
                 'autoPlaceOrderToggle': 'algoTrading.autoPlaceOrderToggle',
-                
+
                 // Market data inputs
                 'tvSymbols': 'marketData.tvSymbols',
                 'tvColumns': 'marketData.tvColumns',
@@ -9357,60 +9360,92 @@
                 return path.split('.').reduce((current, key) => current && current[key], obj);
             }
 
+            // Helper function to escape HTML for tooltip display
+            function escapeTooltip(text) {
+                if (!text) return '';
+                return text.toString()
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
             // Helper function to get current value of element
             function getElementCurrentValue(element) {
                 if (!element) return '';
-                
-                if (element.type === 'checkbox') {
-                    return element.checked ? 'Enabled' : 'Disabled';
-                } else if (element.tagName === 'SELECT') {
-                    const selectedOption = element.options[element.selectedIndex];
-                    return selectedOption ? selectedOption.text : element.value;
-                } else if (element.type === 'radio') {
-                    const radioGroup = document.querySelectorAll(`input[name="${element.name}"]:checked`);
-                    return radioGroup.length > 0 ? radioGroup[0].value : '';
-                } else {
-                    return element.value || '';
+
+                try {
+                    if (element.type === 'checkbox') {
+                        return element.checked ? 'Enabled' : 'Disabled';
+                    } else if (element.tagName === 'SELECT') {
+                        if (element.selectedIndex >= 0 && element.options.length > 0) {
+                            const selectedOption = element.options[element.selectedIndex];
+                            return selectedOption ? (selectedOption.text || selectedOption.value || '') : (element.value || '');
+                        }
+                        return element.value || '';
+                    } else if (element.type === 'radio') {
+                        const radioGroup = document.querySelectorAll(`input[name="${element.name}"]:checked`);
+                        return radioGroup.length > 0 ? (radioGroup[0].value || '') : '';
+                    } else {
+                        return element.value || '';
+                    }
+                } catch (e) {
+                    console.warn('[Tooltip] Error getting value for element:', element.id, e);
+                    return '';
                 }
             }
 
             // Apply tooltips by ID
+            let appliedCount = 0;
             Object.entries(tooltipMap).forEach(([elementId, tooltipPath]) => {
                 const element = document.getElementById(elementId);
                 if (element) {
                     const tooltipText = getNestedValue(tooltipConfig.tooltips, tooltipPath);
                     if (tooltipText) {
                         let fullTooltip = tooltipText;
-                        
+
                         // Add current value if enabled
                         if (showCurrentValue) {
                             const currentValue = getElementCurrentValue(element);
-                            if (!showOnlyIfNotEmpty || (currentValue && currentValue !== '')) {
-                                const formattedValue = valueFormat.replace('{value}', currentValue);
-                                fullTooltip += `\n<span class="tooltip-value">${formattedValue}</span>`;
+                            const trimmedValue = currentValue ? currentValue.toString().trim() : '';
+                            if (!showOnlyIfNotEmpty || trimmedValue !== '') {
+                                const safeValue = escapeTooltip(trimmedValue);
+                                const formattedValue = valueFormat.replace('{value}', safeValue);
+                                fullTooltip += '\n' + formattedValue;
                             }
                         }
-                        
+
                         element.setAttribute('data-tooltip', fullTooltip);
-                        
-                        // Update tooltip on value change
+                        appliedCount++;
+
+                        // Update tooltip on value change with debounce
+                        let updateTimeout;
                         const updateTooltip = () => {
-                            if (showCurrentValue) {
-                                const currentValue = getElementCurrentValue(element);
-                                let newTooltip = tooltipText;
-                                if (!showOnlyIfNotEmpty || (currentValue && currentValue !== '')) {
-                                    const formattedValue = valueFormat.replace('{value}', currentValue);
-                                    newTooltip += `\n<span class="tooltip-value">${formattedValue}</span>`;
+                            clearTimeout(updateTimeout);
+                            updateTimeout = setTimeout(() => {
+                                if (showCurrentValue) {
+                                    const currentValue = getElementCurrentValue(element);
+                                    const trimmedValue = currentValue ? currentValue.toString().trim() : '';
+                                    let newTooltip = tooltipText;
+                                    if (!showOnlyIfNotEmpty || trimmedValue !== '') {
+                                        const safeValue = escapeTooltip(trimmedValue);
+                                        const formattedValue = valueFormat.replace('{value}', safeValue);
+                                        newTooltip += '\n' + formattedValue;
+                                    }
+                                    element.setAttribute('data-tooltip', newTooltip);
                                 }
-                                element.setAttribute('data-tooltip', newTooltip);
-                            }
+                            }, 100);
                         };
-                        
+
                         element.addEventListener('change', updateTooltip);
                         element.addEventListener('input', updateTooltip);
+                        element.addEventListener('blur', updateTooltip);
+                        element.addEventListener('keyup', updateTooltip);
                     }
                 }
             });
+            console.log(`[Tooltip] Applied to ${appliedCount} elements`);
 
             // Apply tooltips to buttons based on onclick attributes
             const buttonTooltipMap = {
@@ -9478,10 +9513,49 @@
             console.log('✅ Tooltips applied to all elements');
         }
 
+        // Debug function to check tooltip values
+        function debugTooltips() {
+            console.log('=== TOOLTIP DEBUG ===');
+            const elements = document.querySelectorAll('[data-tooltip]');
+            console.log(`Total elements with tooltips: ${elements.length}`);
+
+            elements.forEach((el, index) => {
+                const tooltip = el.getAttribute('data-tooltip');
+                const value = el.value || el.textContent || '';
+                console.log(`${index + 1}. #${el.id || 'no-id'} (${el.tagName}):`);
+                console.log(`   Tooltip: ${tooltip}`);
+                console.log(`   Current Value: "${value}"`);
+            });
+            console.log('=== END DEBUG ===');
+            return `Found ${elements.length} elements with tooltips`;
+        }
+
+        // Force reapply tooltips
+        function forceApplyTooltips() {
+            console.log('🔄 Force applying tooltips...');
+            applyTooltips();
+            return 'Tooltips reapplied';
+        }
+
+        // Make functions globally available
+        window.debugTooltips = debugTooltips;
+        window.forceApplyTooltips = forceApplyTooltips;
+
         // Initialize tooltip system
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadTooltipConfig();
-            // Small delay to ensure all elements are fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async () => {
+                await loadTooltipConfig();
+                setTimeout(applyTooltips, 1000);
+            });
+        } else {
+            // DOM already loaded
+            loadTooltipConfig().then(() => {
+                setTimeout(applyTooltips, 1000);
+            });
+        }
+
+        // Also apply on window load to catch any late-loading elements
+        window.addEventListener('load', () => {
             setTimeout(applyTooltips, 500);
         });
         // ==================== END TOOLTIP SYSTEM ====================

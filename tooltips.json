@@ -88,5 +88,12 @@
     "showCurrentValue": true,
     "valueFormat": "Current: {value}",
     "showOnlyIfNotEmpty": true
+  },
+  "_instructions": {
+    "howToEdit": "Simply edit the tooltip text above. Changes take effect on page reload.",
+    "howToTest": "Open browser console (F12) and type: debugTooltips() to see all tooltips",
+    "howToRefresh": "Type refreshTooltips() in console to reload without page refresh",
+    "howToForce": "Type forceApplyTooltips() in console if tooltips are not showing",
+    "note": "If values are not showing in tooltips, check browser console for errors"
   }
 }
