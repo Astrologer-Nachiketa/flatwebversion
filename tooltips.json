@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "tooltips": {
+    "credentials": {
+      "uid": "Enter your FlatTrade User ID",
+      "jKey": "Enter your FlatTrade API key/token",
+      "telegramChatId": "Enter your Telegram Chat ID for notifications (optional)",
+      "signalUrl": "Enter Signal URL for webhook integration (optional)",
+      "connectBtn": "Click to connect to FlatTrade trading server",
+      "saveCredBtn": "Save credentials to local storage"
+    },
+    "search": {
+      "searchInput": "Type symbol name to search (e.g., RELIANCE, NIFTY)",
+      "searchBtn": "Click to search for symbols",
+      "exchangeNSE": "Select NSE exchange for equities",
+      "exchangeBSE": "Select BSE exchange for equities",
+      "exchangeNFO": "Select NFO exchange for F&O contracts",
+      "exchangeCDS": "Select CDS exchange for currency derivatives",
+      "exchangeMCX": "Select MCX exchange for commodities"
+    },
+    "watchlist": {
+      "addSymbolBtn": "Add searched symbol to watchlist",
+      "removeSymbolBtn": "Remove symbol from watchlist",
+      "symbolRow": "Click to view chart and details"
+    },
+    "algoTrading": {
+      "symbol": "Select trading symbol from watchlist",
+      "direction": "Select trade direction - BUY or SELL",
+      "quantity": "Enter quantity/lot size for the order",
+      "targetInput": "Enter target value or percentage",
+      "targetType_percent": "Target calculated as percentage from entry",
+      "targetType_value": "Target as absolute price value",
+      "slInput": "Enter stop loss value or percentage",
+      "slType_percent": "Stop loss calculated as percentage from entry",
+      "slType_value": "Stop loss as absolute price value",
+      "trailingSL": "Enable trailing stop loss - SL moves with favorable price",
+      "repeatCount": "Number of times to re-trigger on SL hit. 0 = No repeat",
+      "algoTriggerType": "Select entry trigger condition type",
+      "algoTriggerValueSource": "Source for trigger value calculation",
+      "algoTriggerValue": "Fixed trigger price value",
+      "emaPercentageValue": "Percentage threshold for EMA-based triggers",
+      "algoTriggerType2": "Second trigger condition (AND logic)",
+      "algoTriggerValueSource2": "Source for trigger 2 value",
+      "algoTriggerValue2": "Fixed trigger 2 price value",
+      "emaPercentageValue2": "Percentage threshold for EMA-based trigger 2",
+      "requireTvCondition": "Require TradingView condition to be met",
+      "tvConditionSymbolSelect": "Select TradingView symbol for condition",
+      "requireSignalCondition": "Require signal condition to be met",
+      "signalTriggerSelect": "Select signal type (Call Entry/Put Entry)",
+      "triggerTimeout": "Trigger timeout in minutes (auto-cancel after)",
+      "placeOrderBtn": "Place order with configured parameters",
+      "stopAllTriggersBtn": "Cancel all active pending triggers",
+      "cancelTriggerBtn": "Cancel this specific pending trigger",
+      "modifyId": "Enter order ID to modify",
+      "modifyTarget": "New target value for modification",
+      "modifyTargetType_percent": "Modify target as percentage",
+      "modifyTargetType_value": "Modify target as absolute value",
+      "modifySL": "New stop loss value for modification",
+      "modifySLType_percent": "Modify SL as percentage",
+      "modifySLType_value": "Modify SL as absolute value",
+      "modifyOrderBtn": "Apply modifications to selected order",
+      "exitPositionBtn": "Exit position immediately at market price",
+      "autoPlaceOrderToggle": "Enable auto order placement (safety feature)"
+    },
+    "orderBook": {
+      "refreshBtn": "Refresh order book from server",
+      "cancelOrderBtn": "Cancel pending order",
+      "orderRow": "Click to view order details"
+    },
+    "positions": {
+      "refreshBtn": "Refresh positions from server",
+      "squareOffBtn": "Close position at market price",
+      "positionRow": "Click to view position details"
+    },
+    "holdings": {
+      "refreshBtn": "Refresh holdings from server",
+      "holdingRow": "Click to view holding details"
+    },
+    "funds": {
+      "refreshBtn": "Refresh funds information"
+    },
+    "marketData": {
+      "depthToggle": "Toggle market depth view",
+      "chartBtn": "Open TradingView chart"
+    }
+  },
+  "dynamicValues": {
+    "showCurrentValue": true,
+    "valueFormat": "Current: {value}",
+    "showOnlyIfNotEmpty": true
+  }
+}
