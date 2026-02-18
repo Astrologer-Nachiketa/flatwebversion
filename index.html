@@ -3687,6 +3687,7 @@
                         <div class="input-group">
                             <label class="algo-label">Trigger Source</label>
                             <select id="algoTriggerValueSource" class="algo-select">
+                                <option value="current_symbol">Current Symbol (Default)</option>
                                 <option value="fixed">Fixed Value</option>
                                 <option value="ema">EMA (60)</option>
                                 <option value="sma">SMA (60)</option>
@@ -3737,6 +3738,7 @@
                                 <div class="input-group">
                                     <label class="algo-label">Trigger 2 Source</label>
                                     <select id="algoTriggerValueSource2" class="algo-select">
+                                        <option value="current_symbol">Current Symbol (Default)</option>
                                         <option value="fixed">Fixed Value</option>
                                         <option value="ema">EMA (60)</option>
                                         <option value="sma">SMA (60)</option>
@@ -4005,6 +4007,12 @@
                     }
                 }
             }
+
+            // Update trigger source dropdowns when algo tab is shown
+            if (tabName === 'algo') {
+                console.log('Algo trading tab shown, updating trigger source dropdowns...');
+                updateTriggerSourceDropdowns();
+            }
         }
 
         // Update Symbol Dropdown for Algo Trading
@@ -4013,6 +4021,72 @@
             symbolSelect.innerHTML = Array.from(subscribedScripts.values())
                 .map(script => `<option value="${script.tsym}|${script.exch}">${script.tsym} (${script.exch})</option>`)
                 .join('');
+
+            // Also update trigger source dropdowns with subscribed instruments
+            updateTriggerSourceDropdowns();
+
+            // Update TV Condition Symbol dropdown
+            const tvSymbolSelect = document.getElementById('tvConditionSymbolSelect');
+            if (tvSymbolSelect) {
+                const currentSelection = tvSymbolSelect.value;
+                const subscribedOptions = Array.from(subscribedScripts.values())
+                    .map(script => `<option value="${script.tsym}|${script.exch}">${script.tsym} (${script.exch})</option>`)
+                    .join('');
+
+                tvSymbolSelect.innerHTML = '<option value="">-- Select TV Symbol --</option>' + subscribedOptions;
+
+                // Restore selection if it still exists
+                if (currentSelection && tvSymbolSelect.querySelector(`option[value="${currentSelection}"]`)) {
+                    tvSymbolSelect.value = currentSelection;
+                }
+            }
+        }
+
+        // Update Trigger Source Dropdowns with Subscribed Instruments
+        function updateTriggerSourceDropdowns() {
+            const triggerSource1 = document.getElementById('algoTriggerValueSource');
+            const triggerSource2 = document.getElementById('algoTriggerValueSource2');
+
+            if (!triggerSource1 || !triggerSource2) return;
+
+            // Save current selections
+            const currentSelection1 = triggerSource1.value;
+            const currentSelection2 = triggerSource2.value;
+
+            // Build base options
+            const baseOptions = `
+                <option value="current_symbol">Current Symbol (Default)</option>
+                <option value="fixed">Fixed Value</option>
+                <option value="ema">EMA (60)</option>
+                <option value="sma">SMA (60)</option>
+                <option value="hist_high">Hist. High</option>
+                <option value="hist_low">Hist. Low</option>
+            `;
+
+            // Build subscribed instruments options
+            const subscribedOptions = Array.from(subscribedScripts.values())
+                .map(script => `<option value="${script.tsym}|${script.exch}">${script.tsym} (${script.exch})</option>`)
+                .join('');
+
+            // Combine all options
+            const allOptions = baseOptions + (subscribedOptions ? `<optgroup label="Subscribed Instruments">${subscribedOptions}</optgroup>` : '');
+
+            // Update dropdowns
+            triggerSource1.innerHTML = allOptions;
+            triggerSource2.innerHTML = allOptions;
+
+            // Restore selections if they still exist
+            if (currentSelection1 && (triggerSource1.querySelector(`option[value="${currentSelection1}"]`) || currentSelection1.includes('|'))) {
+                triggerSource1.value = currentSelection1;
+            } else {
+                triggerSource1.value = 'current_symbol'; // Default to Current Symbol
+            }
+
+            if (currentSelection2 && (triggerSource2.querySelector(`option[value="${currentSelection2}"]`) || currentSelection2.includes('|'))) {
+                triggerSource2.value = currentSelection2;
+            } else {
+                triggerSource2.value = 'current_symbol'; // Default to Current Symbol
+            }
         }
 
         // Credentials Management
@@ -5716,21 +5790,58 @@
             let nextPendingTriggerId = 1;
 
             // --- Helper: Evaluate a single trigger's conditions ---
-            const evaluateSingleTrigger = (triggerType, triggerValueSource, triggerValue, scriptData, emaPercentage = 1) => {
+            const evaluateSingleTrigger = (triggerType, triggerValueSource, triggerValue, scriptData, emaPercentage = 1, orderFormSymbol = null) => {
                 let currentTriggerValue = triggerValue;
-                const currentLtp = parseFloat(scriptData?.data?.lp);
-                const sma = parseFloat(scriptData?.sma);
-                const ema = parseFloat(scriptData?.ema);
-                const histHigh = parseFloat(scriptData?.historicalHigh);
-                const histLow = parseFloat(scriptData?.historicalLow);
+                let triggerScriptData = scriptData; // Data for trigger evaluation (may be different symbol)
+                let orderScriptData = scriptData;   // Data for order symbol (always the order form symbol)
 
-                if (isNaN(currentLtp)) return { met: false, value: NaN }; // Cannot check without LTP
+                // Handle cross-symbol trigger source
+                if (triggerValueSource && triggerValueSource.includes('|')) {
+                    // Trigger source is a specific symbol (e.g., "NIFTY|NFO")
+                    const [triggerTsym, triggerExch] = triggerValueSource.split('|');
+
+                    // Find the trigger source symbol in subscribedScripts
+                    for (const [key, value] of subscribedScripts.entries()) {
+                        if (value.tsym === triggerTsym && value.exch === triggerExch) {
+                            triggerScriptData = value;
+                            debugLog(`Cross-symbol trigger: Using ${triggerValueSource} data for trigger evaluation`, 'info');
+                            break;
+                        }
+                    }
+
+                    // If order form symbol is provided and different from trigger source, find order symbol data
+                    if (orderFormSymbol && orderFormSymbol !== triggerValueSource) {
+                        const [orderTsym, orderExch] = orderFormSymbol.split('|');
+                        for (const [key, value] of subscribedScripts.entries()) {
+                            if (value.tsym === orderTsym && value.exch === orderExch) {
+                                orderScriptData = value;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Use triggerScriptData for trigger evaluation (LTP comparison)
+                const currentLtp = parseFloat(triggerScriptData?.data?.lp);
+                const sma = parseFloat(triggerScriptData?.sma);
+                const ema = parseFloat(triggerScriptData?.ema);
+                const histHigh = parseFloat(triggerScriptData?.historicalHigh);
+                const histLow = parseFloat(triggerScriptData?.historicalLow);
+
+                // Use orderScriptData for order-related values (if needed in future)
+                const orderLtp = parseFloat(orderScriptData?.data?.lp);
+
+                if (isNaN(currentLtp)) {
+                    debugLog(`Cannot evaluate trigger: LTP not available for trigger source ${triggerValueSource}`, 'warn');
+                    return { met: false, value: NaN }; // Cannot check without LTP
+                }
 
                 // Determine the actual value to compare against based on the selected Source
                 if (triggerValueSource === 'ema') currentTriggerValue = ema;
                 else if (triggerValueSource === 'sma') currentTriggerValue = sma;
                 else if (triggerValueSource === 'hist_high') currentTriggerValue = histHigh;
                 else if (triggerValueSource === 'hist_low') currentTriggerValue = histLow;
+                // For 'current_symbol' or specific symbol, use the fixed value or calculated value
 
                 const isCustomTrigger = triggerType === 'buy_green_ltp_lt_sma' || triggerType === 'buy_ltp_gt_ema_gt_sma' || triggerType === 'buy_ema_gt_sma_and_ema_minus_ltp_gt_1pct' || triggerType === 'reversal_buy' || triggerType === 'reversal_sell' || triggerType === 'trade_ratio_gt_ema_gt_sma' || triggerType === 'trade_ratio_lt_sma_lt_ema';
 
@@ -5879,8 +5990,14 @@
 
                     // Helper to format trigger value display
                     const formatTriggerValue = (value, source) => {
-                        if (source && source !== 'fixed') return `[${source.toUpperCase()}]`;
-                        return value || 'N/A';
+                        if (!source || source === 'fixed') return value || 'N/A';
+                        if (source === 'current_symbol') return '[CURRENT SYMBOL]';
+                        if (source.includes('|')) {
+                            // Cross-symbol trigger: show the symbol name
+                            const [tsym, exch] = source.split('|');
+                            return `[${tsym}]`;
+                        }
+                        return `[${source.toUpperCase()}]`;
                     };
 
                     // Show R badge for re-armed triggers
@@ -6084,34 +6201,73 @@
                 // Iterate through all pending triggers
                 pendingEntryTriggers.forEach((triggerInfo, triggerId) => {
                     const triggerSymbolTsymExch = triggerInfo.params.symbol; // The symbol this trigger is for (e.g., 'NIFTY09APR25C22600|NFO')
+                    const triggerValueSource = triggerInfo.params.triggerValueSource; // Trigger source (e.g., 'current_symbol', 'NIFTY|NFO')
+                    const triggerValueSource2 = triggerInfo.params.triggerValueSource2; // Trigger 2 source
 
-                    // Find the corresponding Exch|Token key for this specific trigger's symbol
+                    // Find the corresponding Exch|Token key for this specific trigger's symbol (order symbol)
                     let triggerExchTokenKey = null;
                     const triggerScript = Array.from(subscribedScripts.values()).find(s => `${s.tsym}|${s.exch}` === triggerSymbolTsymExch);
                     if (triggerScript) {
                         triggerExchTokenKey = `${triggerScript.exch}|${triggerScript.token}`;
                     } else {
                         // This trigger's symbol isn't currently subscribed? Should not happen if registered correctly.
-                        // debugLog(`Trigger #${triggerId} symbol ${triggerSymbolTsymExch} not found in subscribedScripts. Cannot check.`, 'warn');
                         return; // Skip this trigger if we can't find its key
                     }
 
-                    // *** CORE FIX: Only evaluate if THIS trigger is for the symbol that was just updated ***
-                    if (triggerExchTokenKey === updatedSymbolKey) {
-                        debugLog(`Evaluating trigger #${triggerId} (${triggerSymbolTsymExch}) because its symbol ${updatedSymbolKey} was updated.`, 'info');
+                    // Determine if we should evaluate this trigger based on the updated symbol
+                    let shouldEvaluate = false;
+                    let evaluationScriptData = updatedScriptData;
+
+                    // Check if trigger source is a specific symbol (cross-symbol trigger)
+                    const isCrossSymbolTrigger1 = triggerValueSource && triggerValueSource.includes('|');
+                    const isCrossSymbolTrigger2 = triggerValueSource2 && triggerValueSource2.includes('|');
+
+                    if (isCrossSymbolTrigger1 || isCrossSymbolTrigger2) {
+                        // Cross-symbol trigger: check if updated symbol matches the trigger source symbol
+                        let triggerSourceExchTokenKey = null;
+
+                        if (isCrossSymbolTrigger1) {
+                            const [sourceTsym, sourceExch] = triggerValueSource.split('|');
+                            const sourceScript = Array.from(subscribedScripts.values()).find(s => s.tsym === sourceTsym && s.exch === sourceExch);
+                            if (sourceScript) {
+                                triggerSourceExchTokenKey = `${sourceScript.exch}|${sourceScript.token}`;
+                            }
+                        } else if (isCrossSymbolTrigger2) {
+                            const [sourceTsym, sourceExch] = triggerValueSource2.split('|');
+                            const sourceScript = Array.from(subscribedScripts.values()).find(s => s.tsym === sourceTsym && s.exch === sourceExch);
+                            if (sourceScript) {
+                                triggerSourceExchTokenKey = `${sourceScript.exch}|${sourceScript.token}`;
+                            }
+                        }
+
+                        // Evaluate if the updated symbol is the trigger source symbol
+                        if (triggerSourceExchTokenKey === updatedSymbolKey) {
+                            shouldEvaluate = true;
+                            debugLog(`Evaluating cross-symbol trigger #${triggerId} because trigger source ${updatedSymbolKey} was updated.`, 'info');
+                        }
+                    } else {
+                        // Standard trigger: check if updated symbol matches the order symbol
+                        if (triggerExchTokenKey === updatedSymbolKey) {
+                            shouldEvaluate = true;
+                            debugLog(`Evaluating trigger #${triggerId} (${triggerSymbolTsymExch}) because its symbol ${updatedSymbolKey} was updated.`, 'info');
+                        }
+                    }
+
+                    // *** Evaluate trigger if conditions are met ***
+                    if (shouldEvaluate) {
                         const { params } = triggerInfo; // Get the trigger's specific parameters
 
-                        // Evaluate using the trigger's params and the UPDATED script data (which IS the correct data for this symbol)
-                        const result1 = evaluateSingleTrigger(params.triggerType, params.triggerValueSource, params.triggerValue, updatedScriptData, params.emaPercentageValue);
+                        // Evaluate Trigger 1 - pass order form symbol for cross-symbol support
+                        const result1 = evaluateSingleTrigger(params.triggerType, params.triggerValueSource, params.triggerValue, updatedScriptData, params.emaPercentageValue, triggerSymbolTsymExch);
                         let trigger1Met = result1.met;
-                        debugLog(`#${triggerId} Trigger 1 (${params.triggerType}): Met = ${trigger1Met}`, 'info');
+                        debugLog(`#${triggerId} Trigger 1 (${params.triggerType}): Met = ${trigger1Met}, Source = ${params.triggerValueSource}`, 'info');
 
-                        // Evaluate Trigger 2 (if active), also using the updatedScriptData
+                        // Evaluate Trigger 2 (if active), also pass order form symbol
                         let trigger2Met = true;
                         if (params.triggerType2 !== 'no_trigger') {
-                            const result2 = evaluateSingleTrigger(params.triggerType2, params.triggerValueSource2, params.triggerValue2, updatedScriptData, params.emaPercentageValue2);
+                            const result2 = evaluateSingleTrigger(params.triggerType2, params.triggerValueSource2, params.triggerValue2, updatedScriptData, params.emaPercentageValue2, triggerSymbolTsymExch);
                             trigger2Met = result2.met;
-                            debugLog(`#${triggerId} Trigger 2 (${params.triggerType2}): Met = ${trigger2Met}`, 'info');
+                            debugLog(`#${triggerId} Trigger 2 (${params.triggerType2}): Met = ${trigger2Met}, Source = ${params.triggerValueSource2}`, 'info');
                         }
 
                         // --- Start TV Condition Check --- 
@@ -6491,11 +6647,18 @@
 
                         // --- Validation for Triggered Order --- 
                         const isTrigger1Custom = params.triggerType === 'buy_green_ltp_lt_sma' || params.triggerType === 'buy_ltp_gt_ema_gt_sma' || params.triggerType === 'buy_ema_gt_sma_and_ema_minus_ltp_gt_1pct' || params.triggerType === 'reversal_buy' || params.triggerType === 'reversal_sell' || params.triggerType === 'trade_ratio_gt_ema_gt_sma' || params.triggerType === 'trade_ratio_lt_sma_lt_ema';
+                        const isTrigger1CrossSymbol = params.triggerValueSource && params.triggerValueSource.includes('|');
+                        const isTrigger1CurrentSymbol = params.triggerValueSource === 'current_symbol';
+
+                        // Only require trigger value for fixed source (not for current_symbol, cross-symbol, ema, sma, etc.)
                         if (!isTrigger1Custom && params.triggerValueSource === 'fixed' && isNaN(params.triggerValue)) {
                             throw new Error("Please enter a valid trigger 1 value (required for non-custom trigger types with fixed source).");
                         }
+
                         if (params.triggerType2 !== 'no_trigger') {
                             const isTrigger2Custom = params.triggerType2 === 'buy_green_ltp_lt_sma' || params.triggerType2 === 'buy_ltp_gt_ema_gt_sma' || params.triggerType2 === 'buy_ema_gt_sma_and_ema_minus_ltp_gt_1pct' || params.triggerType2 === 'reversal_buy' || params.triggerType2 === 'reversal_sell' || params.triggerType2 === 'trade_ratio_gt_ema_gt_sma' || params.triggerType2 === 'trade_ratio_lt_sma_lt_ema';
+                            const isTrigger2CrossSymbol = params.triggerValueSource2 && params.triggerValueSource2.includes('|');
+
                             if (!isTrigger2Custom && params.triggerValueSource2 === 'fixed' && isNaN(params.triggerValue2)) {
                                 throw new Error("Please enter a valid trigger 2 value (required for non-custom trigger types with fixed source).");
                             }
