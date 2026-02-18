@@ -808,6 +808,17 @@
             /* Reduced margin */
         }
 
+        .target-sl-section {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .target-sl-section .input-group {
+            margin: 4px 0;
+        }
+
         /* Reduce heading margins specifically within algo tab */
         #algo h2,
         #algo h3,
@@ -1083,6 +1094,14 @@
         .trigger-detail-value {
             font-weight: 500;
             color: #333;
+        }
+
+        .trigger-target-sl {
+            background: #f8f9fa;
+            padding: 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            border-left: 3px solid #28a745;
         }
 
         .trigger-timer {
@@ -3625,8 +3644,19 @@
                         </div>
 
                         <div class="price-input-group">
-                            <div>
+                            <div class="target-sl-section">
                                 <h4>Target</h4>
+                                <div class="input-group">
+                                    <label class="algo-label">Source</label>
+                                    <select id="targetSource" class="algo-select" onchange="handleTargetSourceChange()">
+                                        <option value="current_symbol">Current Symbol (Default)</option>
+                                        <option value="subscribed">Subscribed Instrument</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" id="targetInstrumentGroup" style="display: none;">
+                                    <label class="algo-label">Instrument</label>
+                                    <select id="targetInstrument" class="algo-select"></select>
+                                </div>
                                 <div class="input-radio-group">
                                     <label>
                                         <input type="radio" name="targetType" value="percent" checked> %
@@ -3638,8 +3668,19 @@
                                 <input type="number" id="targetInput" class="algo-input" step="0.01" value="1">
                             </div>
 
-                            <div>
+                            <div class="target-sl-section">
                                 <h4>Stoploss</h4>
+                                <div class="input-group">
+                                    <label class="algo-label">Source</label>
+                                    <select id="slSource" class="algo-select" onchange="handleSLSourceChange()">
+                                        <option value="current_symbol">Current Symbol (Default)</option>
+                                        <option value="subscribed">Subscribed Instrument</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" id="slInstrumentGroup" style="display: none;">
+                                    <label class="algo-label">Instrument</label>
+                                    <select id="slInstrument" class="algo-select"></select>
+                                </div>
                                 <div class="input-radio-group">
                                     <label>
                                         <input type="radio" name="slType" value="percent" checked> %
@@ -3801,6 +3842,7 @@
 
                         <button class="algo-btn primary-btn" onclick="OrderSystem.handleUIPlaceOrder()">📤 Place
                             Order</button>
+                        <button class="algo-btn secondary-btn" onclick="resetNewOrderToDefaults()" style="margin-left: 10px; background: #6c757d;">🔄 Reset to Default</button>
                     </div>
                 </div> <!-- End Left Column -->
 
@@ -3818,12 +3860,23 @@
                         <h3>⚙️ Modify Order</h3>
                         <div class="input-group">
                             <label class="algo-label">Order ID</label>
-                            <input type="number" id="modifyId" class="algo-input">
+                            <input type="number" id="modifyId" class="algo-input" onblur="populateModifyOrderFields()">
                         </div>
 
                         <div class="price-input-group">
-                            <div>
+                            <div class="target-sl-section">
                                 <h4>🎯 New Target</h4>
+                                <div class="input-group">
+                                    <label class="algo-label">Source</label>
+                                    <select id="modifyTargetSource" class="algo-select" onchange="handleModifyTargetSourceChange()">
+                                        <option value="current_symbol">Current Symbol (Default)</option>
+                                        <option value="subscribed">Subscribed Instrument</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" id="modifyTargetInstrumentGroup" style="display: none;">
+                                    <label class="algo-label">Instrument</label>
+                                    <select id="modifyTargetInstrument" class="algo-select"></select>
+                                </div>
                                 <div class="input-radio-group">
                                     <label>
                                         <input type="radio" name="modifyTargetType" value="percent"> %
@@ -3835,8 +3888,19 @@
                                 <input type="number" id="modifyTarget" class="algo-input" step="0.01">
                             </div>
 
-                            <div>
+                            <div class="target-sl-section">
                                 <h4>🛑 New SL</h4>
+                                <div class="input-group">
+                                    <label class="algo-label">Source</label>
+                                    <select id="modifySLSource" class="algo-select" onchange="handleModifySLSourceChange()">
+                                        <option value="current_symbol">Current Symbol (Default)</option>
+                                        <option value="subscribed">Subscribed Instrument</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" id="modifySLInstrumentGroup" style="display: none;">
+                                    <label class="algo-label">Instrument</label>
+                                    <select id="modifySLInstrument" class="algo-select"></select>
+                                </div>
                                 <div class="input-radio-group">
                                     <label>
                                         <input type="radio" name="modifySLType" value="percent"> %
@@ -4012,6 +4076,7 @@
             if (tabName === 'algo') {
                 console.log('Algo trading tab shown, updating trigger source dropdowns...');
                 updateTriggerSourceDropdowns();
+                updateTargetSLInstrumentDropdowns();
             }
         }
 
@@ -4024,6 +4089,7 @@
 
             // Also update trigger source dropdowns with subscribed instruments
             updateTriggerSourceDropdowns();
+            updateTargetSLInstrumentDropdowns();
 
             // Update TV Condition Symbol dropdown
             const tvSymbolSelect = document.getElementById('tvConditionSymbolSelect');
@@ -4087,6 +4153,257 @@
             } else {
                 triggerSource2.value = 'current_symbol'; // Default to Current Symbol
             }
+        }
+
+        // Update Target/SL Instrument Dropdowns with Subscribed Instruments
+        function updateTargetSLInstrumentDropdowns() {
+            const targetInstrument = document.getElementById('targetInstrument');
+            const slInstrument = document.getElementById('slInstrument');
+            const modifyTargetInstrument = document.getElementById('modifyTargetInstrument');
+            const modifySLInstrument = document.getElementById('modifySLInstrument');
+
+            // Save current selections
+            const currentTargetInst = targetInstrument?.value;
+            const currentSLInst = slInstrument?.value;
+            const currentModifyTargetInst = modifyTargetInstrument?.value;
+            const currentModifySLInst = modifySLInstrument?.value;
+
+            // Build subscribed instruments options
+            const subscribedOptions = Array.from(subscribedScripts.values())
+                .map(script => `<option value="${script.tsym}|${script.exch}">${script.tsym} (${script.exch})</option>`)
+                .join('');
+
+            // Update all instrument dropdowns
+            if (targetInstrument) {
+                targetInstrument.innerHTML = subscribedOptions || '<option value="">No instruments</option>';
+                if (currentTargetInst && targetInstrument.querySelector(`option[value="${currentTargetInst}"]`)) {
+                    targetInstrument.value = currentTargetInst;
+                }
+            }
+
+            if (slInstrument) {
+                slInstrument.innerHTML = subscribedOptions || '<option value="">No instruments</option>';
+                if (currentSLInst && slInstrument.querySelector(`option[value="${currentSLInst}"]`)) {
+                    slInstrument.value = currentSLInst;
+                }
+            }
+
+            if (modifyTargetInstrument) {
+                modifyTargetInstrument.innerHTML = subscribedOptions || '<option value="">No instruments</option>';
+                if (currentModifyTargetInst && modifyTargetInstrument.querySelector(`option[value="${currentModifyTargetInst}"]`)) {
+                    modifyTargetInstrument.value = currentModifyTargetInst;
+                }
+            }
+
+            if (modifySLInstrument) {
+                modifySLInstrument.innerHTML = subscribedOptions || '<option value="">No instruments</option>';
+                if (currentModifySLInst && modifySLInstrument.querySelector(`option[value="${currentModifySLInst}"]`)) {
+                    modifySLInstrument.value = currentModifySLInst;
+                }
+            }
+        }
+
+        // Handle Target Source Change
+        function handleTargetSourceChange() {
+            const targetSource = document.getElementById('targetSource');
+            const targetInstrumentGroup = document.getElementById('targetInstrumentGroup');
+            
+            if (targetSource && targetInstrumentGroup) {
+                if (targetSource.value === 'subscribed') {
+                    targetInstrumentGroup.style.display = 'flex';
+                    updateTargetSLInstrumentDropdowns();
+                } else {
+                    targetInstrumentGroup.style.display = 'none';
+                }
+            }
+        }
+
+        // Handle SL Source Change
+        function handleSLSourceChange() {
+            const slSource = document.getElementById('slSource');
+            const slInstrumentGroup = document.getElementById('slInstrumentGroup');
+            
+            if (slSource && slInstrumentGroup) {
+                if (slSource.value === 'subscribed') {
+                    slInstrumentGroup.style.display = 'flex';
+                    updateTargetSLInstrumentDropdowns();
+                } else {
+                    slInstrumentGroup.style.display = 'none';
+                }
+            }
+        }
+
+        // Handle Modify Target Source Change
+        function handleModifyTargetSourceChange() {
+            const modifyTargetSource = document.getElementById('modifyTargetSource');
+            const modifyTargetInstrumentGroup = document.getElementById('modifyTargetInstrumentGroup');
+            
+            if (modifyTargetSource && modifyTargetInstrumentGroup) {
+                if (modifyTargetSource.value === 'subscribed') {
+                    modifyTargetInstrumentGroup.style.display = 'flex';
+                    updateTargetSLInstrumentDropdowns();
+                } else {
+                    modifyTargetInstrumentGroup.style.display = 'none';
+                }
+            }
+        }
+
+        // Handle Modify SL Source Change
+        function handleModifySLSourceChange() {
+            const modifySLSource = document.getElementById('modifySLSource');
+            const modifySLInstrumentGroup = document.getElementById('modifySLInstrumentGroup');
+            
+            if (modifySLSource && modifySLInstrumentGroup) {
+                if (modifySLSource.value === 'subscribed') {
+                    modifySLInstrumentGroup.style.display = 'flex';
+                    updateTargetSLInstrumentDropdowns();
+                } else {
+                    modifySLInstrumentGroup.style.display = 'none';
+                }
+            }
+        }
+
+        // Populate Modify Order fields when Order ID is entered
+        function populateModifyOrderFields() {
+            const orderIdInput = document.getElementById('modifyId');
+            const orderId = parseInt(orderIdInput.value);
+            
+            if (!orderId || isNaN(orderId)) {
+                return; // Invalid order ID
+            }
+            
+            // Find the order
+            const order = OrderSystem.orders.find(o => o.id === orderId);
+            if (!order) {
+                OrderSystem.debugLog(`Order #${orderId} not found`, 'warn');
+                return;
+            }
+            
+            // Populate Target fields
+            const modifyTargetSource = document.getElementById('modifyTargetSource');
+            const modifyTargetInstrument = document.getElementById('modifyTargetInstrument');
+            const modifyTarget = document.getElementById('modifyTarget');
+            const modifyTargetInstrumentGroup = document.getElementById('modifyTargetInstrumentGroup');
+            
+            if (modifyTargetSource) {
+                modifyTargetSource.value = order.targetSource || 'current_symbol';
+                // Show/hide instrument dropdown based on source
+                if (order.targetSource === 'subscribed' && modifyTargetInstrumentGroup) {
+                    modifyTargetInstrumentGroup.style.display = 'flex';
+                    // Update dropdown options first
+                    updateTargetSLInstrumentDropdowns();
+                    // Then set the selected value
+                    if (modifyTargetInstrument && order.targetInstrument) {
+                        modifyTargetInstrument.value = order.targetInstrument;
+                    }
+                } else if (modifyTargetInstrumentGroup) {
+                    modifyTargetInstrumentGroup.style.display = 'none';
+                }
+            }
+            
+            // Set target value
+            if (modifyTarget) {
+                modifyTarget.value = order.target || '';
+            }
+            
+            // Set target type radio button
+            const targetTypeRadios = document.querySelectorAll('input[name="modifyTargetType"]');
+            targetTypeRadios.forEach(radio => {
+                radio.checked = (radio.value === 'percent' && order.isPercent?.target) || 
+                               (radio.value === 'value' && !order.isPercent?.target);
+            });
+            
+            // Populate SL fields
+            const modifySLSource = document.getElementById('modifySLSource');
+            const modifySLInstrument = document.getElementById('modifySLInstrument');
+            const modifySL = document.getElementById('modifySL');
+            const modifySLInstrumentGroup = document.getElementById('modifySLInstrumentGroup');
+            
+            if (modifySLSource) {
+                modifySLSource.value = order.slSource || 'current_symbol';
+                // Show/hide instrument dropdown based on source
+                if (order.slSource === 'subscribed' && modifySLInstrumentGroup) {
+                    modifySLInstrumentGroup.style.display = 'flex';
+                    // Update dropdown options first
+                    updateTargetSLInstrumentDropdowns();
+                    // Then set the selected value
+                    if (modifySLInstrument && order.slInstrument) {
+                        modifySLInstrument.value = order.slInstrument;
+                    }
+                } else if (modifySLInstrumentGroup) {
+                    modifySLInstrumentGroup.style.display = 'none';
+                }
+            }
+            
+            // Set SL value
+            if (modifySL) {
+                modifySL.value = order.sl || '';
+            }
+            
+            // Set SL type radio button
+            const slTypeRadios = document.querySelectorAll('input[name="modifySLType"]');
+            slTypeRadios.forEach(radio => {
+                radio.checked = (radio.value === 'percent' && order.isPercent?.sl) || 
+                               (radio.value === 'value' && !order.isPercent?.sl);
+            });
+            
+            OrderSystem.debugLog(`Populated modify form for Order #${orderId} - Target: ${order.target} (${order.targetSource}), SL: ${order.sl} (${order.slSource})`, 'info');
+        }
+
+        // Reset New Order form to default values
+        function resetNewOrderToDefaults() {
+            // Basic Order Parameters
+            document.getElementById('quantity').value = '65';
+            document.getElementById('direction').value = 'BUY';
+            
+            // Target - Reset to defaults
+            document.getElementById('targetSource').value = 'current_symbol';
+            document.getElementById('targetInput').value = '1';
+            handleTargetSourceChange(); // Hide instrument dropdown
+            
+            // Target Type - Select Percent
+            const targetTypeRadios = document.querySelectorAll('input[name="targetType"]');
+            targetTypeRadios.forEach(radio => {
+                radio.checked = radio.value === 'percent';
+            });
+            
+            // Stop Loss - Reset to defaults
+            document.getElementById('slSource').value = 'current_symbol';
+            document.getElementById('slInput').value = '1';
+            handleSLSourceChange(); // Hide instrument dropdown
+            
+            // SL Type - Select Percent
+            const slTypeRadios = document.querySelectorAll('input[name="slType"]');
+            slTypeRadios.forEach(radio => {
+                radio.checked = radio.value === 'percent';
+            });
+            
+            // Other Settings
+            document.getElementById('trailingSL').checked = false;
+            document.getElementById('repeatCount').value = '0';
+            
+            // Trigger Settings - Reset to no trigger
+            document.getElementById('algoTriggerType').value = 'no_trigger';
+            document.getElementById('algoTriggerValue').value = '';
+            document.getElementById('algoTriggerValueSource').value = 'current_symbol';
+            document.getElementById('emaPercentageValue').value = '1';
+            
+            // Trigger 2 Settings
+            document.getElementById('algoTriggerType2').value = 'no_trigger';
+            document.getElementById('algoTriggerValue2').value = '';
+            document.getElementById('algoTriggerValueSource2').value = 'current_symbol';
+            document.getElementById('emaPercentageValue2').value = '1';
+            
+            // Multi Conditions
+            document.getElementById('requireTvCondition').checked = false;
+            document.getElementById('tvConditionSymbolSelect').value = '';
+            document.getElementById('requireSignalCondition').checked = false;
+            document.getElementById('signalTriggerSelect').value = '';
+            
+            // Timeout
+            document.getElementById('triggerTimeout').value = '5';
+            
+            OrderSystem.debugLog('New Order form reset to default values', 'info');
         }
 
         // Credentials Management
@@ -4603,6 +4920,11 @@
                 OrderSystem.updateDisplay();
             }
             */
+
+            // Update Active Triggers display to show latest LTP
+            if (!isNaN(ltp) && pendingEntryTriggers.size > 0) {
+                renderActiveTriggers();
+            }
         }
 
         // Calculate Simple Moving Average
@@ -5991,22 +6313,30 @@
                     // Helper to format trigger value display
                     const formatTriggerValue = (value, source) => {
                         if (!source || source === 'fixed') return value || 'N/A';
-                        if (source === 'current_symbol') return '[CURRENT SYMBOL]';
+                        if (source === 'current_symbol') return value ? `${value} [CURRENT]` : '[CURRENT SYMBOL]';
                         if (source.includes('|')) {
-                            // Cross-symbol trigger: show the symbol name
+                            // Cross-symbol trigger: show the value and symbol name
                             const [tsym, exch] = source.split('|');
-                            return `[${tsym}]`;
+                            return value ? `${value} [${tsym}]` : `[${tsym}]`;
                         }
-                        return `[${source.toUpperCase()}]`;
+                        return value ? `${value} [${source.toUpperCase()}]` : `[${source.toUpperCase()}]`;
                     };
 
                     // Show R badge for re-armed triggers
                     const repeatBadge = params.isRearmed ? `<span class="trigger-repeat-badge" title="Re-armed trigger - R${repeatCount} remaining">R${repeatCount}</span>` : '';
 
+                    // Get current LTP for the trigger symbol
+                    let symbolLTP = null;
+                    const triggerScript = Array.from(subscribedScripts.values())
+                        .find(s => `${s.tsym}|${s.exch}` === params.symbol);
+                    if (triggerScript && triggerScript.data?.lp) {
+                        symbolLTP = parseFloat(triggerScript.data.lp).toFixed(2);
+                    }
+
                     html += `
                         <div class="trigger-card ${direction === 'BUY' ? 'buy-trigger' : 'sell-trigger'}" data-trigger-id="${triggerId}">
                             <div class="trigger-header">
-                                <span class="trigger-symbol">${symbol}</span>
+                                <span class="trigger-symbol">${symbol}${symbolLTP ? ` @ ${symbolLTP}` : ''}</span>
                                 <div class="trigger-badges">
                                     ${repeatBadge}
                                     <span class="trigger-type-badge">${formatTriggerType(triggerType)}</span>
@@ -6039,6 +6369,16 @@
                                     <span class="trigger-detail-value">${formatTriggerType(triggerType2)} @ ${formatTriggerValue(triggerValue2, triggerValueSource2)}</span>
                                 </div>
                                 ` : ''}
+                            </div>
+                            <div class="trigger-details trigger-target-sl">
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">🎯 Target:</span>
+                                    <span class="trigger-detail-value">${params.target}${params.isPercent?.target ? '%' : ''} ${params.targetSource === 'subscribed' && params.targetInstrument ? `(${params.targetInstrument.split('|')[0]})` : '(Current)'}</span>
+                                </div>
+                                <div class="trigger-detail-item">
+                                    <span class="trigger-detail-label">🛑 SL:</span>
+                                    <span class="trigger-detail-value">${params.sl}${params.isPercent?.sl ? '%' : ''} ${params.slSource === 'subscribed' && params.slInstrument ? `(${params.slInstrument.split('|')[0]})` : '(Current)'}</span>
+                                </div>
                             </div>
                             <div class="trigger-timer ${isExpiringSoon ? 'expiring-soon' : ''}">
                                 ⏱️ ${remainingTime}
@@ -6127,6 +6467,32 @@
                         throw new Error("Unable to get current price. Please ensure the symbol is properly subscribed and receiving market data.");
                     }
 
+                    // Get Target Instrument Price if using subscribed instrument
+                    let targetSymbolLTP = parseFloat(currentPrice);
+                    if (params.targetSource === 'subscribed' && params.targetInstrument) {
+                        const targetScript = Array.from(subscribedScripts.values())
+                            .find(s => `${s.tsym}|${s.exch}` === params.targetInstrument);
+                        if (targetScript && targetScript.data?.lp) {
+                            targetSymbolLTP = parseFloat(targetScript.data.lp);
+                            debugLog(`Using Target Instrument ${params.targetInstrument} price: ${targetSymbolLTP}`, 'info');
+                        } else {
+                            debugLog(`Target instrument ${params.targetInstrument} not found or no price data, using current symbol price`, 'warn');
+                        }
+                    }
+
+                    // Get SL Instrument Price if using subscribed instrument
+                    let slSymbolLTP = parseFloat(currentPrice);
+                    if (params.slSource === 'subscribed' && params.slInstrument) {
+                        const slScript = Array.from(subscribedScripts.values())
+                            .find(s => `${s.tsym}|${s.exch}` === params.slInstrument);
+                        if (slScript && slScript.data?.lp) {
+                            slSymbolLTP = parseFloat(slScript.data.lp);
+                            debugLog(`Using SL Instrument ${params.slInstrument} price: ${slSymbolLTP}`, 'info');
+                        } else {
+                            debugLog(`SL instrument ${params.slInstrument} not found or no price data, using current symbol price`, 'warn');
+                        }
+                    }
+
                     // Place order using the correct scriptKey format (calls the GLOBAL placeOrder)
                     const brokerResponse = await placeOrder(
                         params.direction === 'BUY' ? 'B' : 'S',
@@ -6144,8 +6510,13 @@
                         id: orderIdCounter++,
                         brokerId: brokerResponse.norenordno,
                         entryPrice: parseFloat(currentPrice),
+                        targetSymbolLTP: targetSymbolLTP,
+                        slSymbolLTP: slSymbolLTP,
                         ...params
                     });
+
+                    // Debug log the calculated prices
+                    debugLog(`Order #${order.id} - Entry: ${order.entryPrice.toFixed(2)}, Target: ${order.targetPrice.toFixed(2)} (base: ${order.targetSymbolLTP.toFixed(2)}), SL: ${order.slPrice.toFixed(2)} (base: ${order.slSymbolLTP.toFixed(2)})`, 'info');
 
                     orders.push(order);
                     updateDisplay();
@@ -6344,22 +6715,55 @@
                     this.history = [];
                     this.lastUpdate = Date.now();
                     this.initialSL = params.sl;
+                    
+                    // Target/SL Source Properties
+                    this.targetSource = params.targetSource || 'current_symbol';
+                    this.slSource = params.slSource || 'current_symbol';
+                    this.targetInstrument = params.targetInstrument || null;
+                    this.slInstrument = params.slInstrument || null;
+                    // Use passed target/slSymbolLTP if available, otherwise default to entryPrice
+                    this.targetSymbolLTP = params.targetSymbolLTP !== undefined ? params.targetSymbolLTP : params.entryPrice;
+                    this.slSymbolLTP = params.slSymbolLTP !== undefined ? params.slSymbolLTP : params.entryPrice;
 
                     this.updatePrices(params.target, params.sl);
                 }
 
                 updatePrices(target, sl) {
+                    // Get base price for target calculation
+                    let targetBasePrice = this.entryPrice;
+                    if (this.targetSource === 'subscribed' && this.targetInstrument) {
+                        targetBasePrice = this.targetSymbolLTP || this.entryPrice;
+                    }
+                    
+                    // Get base price for SL calculation
+                    let slBasePrice = this.entryPrice;
+                    if (this.slSource === 'subscribed' && this.slInstrument) {
+                        slBasePrice = this.slSymbolLTP || this.entryPrice;
+                    }
+
                     this.targetPrice = this.isPercent.target ?
                         (this.direction === "BUY"
-                            ? this.entryPrice * (1 + target / 100)
-                            : this.entryPrice * (1 - target / 100))
+                            ? targetBasePrice * (1 + target / 100)
+                            : targetBasePrice * (1 - target / 100))
                         : target;
 
                     this.slPrice = this.isPercent.sl ?
                         (this.direction === "BUY"
-                            ? this.entryPrice * (1 - sl / 100)
-                            : this.entryPrice * (1 + sl / 100))
+                            ? slBasePrice * (1 - sl / 100)
+                            : slBasePrice * (1 + sl / 100))
                         : sl;
+                }
+
+                // Helper method to update base prices from subscribed instrument
+                updateBasePrices(targetSymbolLTP, slSymbolLTP) {
+                    if (targetSymbolLTP !== undefined) {
+                        this.targetSymbolLTP = targetSymbolLTP;
+                    }
+                    if (slSymbolLTP !== undefined) {
+                        this.slSymbolLTP = slSymbolLTP;
+                    }
+                    // Recalculate prices with new base values
+                    this.updatePrices(this.target, this.sl);
                 }
 
                 calculateMTM(currentPrice) {
@@ -6368,23 +6772,45 @@
                         : (this.entryPrice - currentPrice) * this.quantity;
                 }
 
-                checkConditions(currentPrice) {
+                checkConditions(orderSymbolPrice) {
                     if (!this.active) return;
 
-                    const isBuy = this.direction === "BUY";
-                    let exit = false;
-                    let reason = "";
-
-                    if (isBuy) {
-                        if (currentPrice >= this.targetPrice) reason = "TARGET_HIT";
-                        else if (currentPrice <= this.slPrice) reason = "SL_TRIGGERED";
-                    } else {
-                        if (currentPrice <= this.targetPrice) reason = "TARGET_HIT";
-                        else if (currentPrice >= this.slPrice) reason = "SL_TRIGGERED";
+                    // Get current prices for target and SL instruments
+                    let targetCheckPrice = orderSymbolPrice;
+                    let slCheckPrice = orderSymbolPrice;
+                    
+                    // If target is based on subscribed instrument, get its current price
+                    if (this.targetSource === 'subscribed' && this.targetInstrument) {
+                        const targetScript = Array.from(subscribedScripts.values())
+                            .find(s => `${s.tsym}|${s.exch}` === this.targetInstrument);
+                        if (targetScript && targetScript.data?.lp) {
+                            targetCheckPrice = parseFloat(targetScript.data.lp);
+                        }
+                    }
+                    
+                    // If SL is based on subscribed instrument, get its current price
+                    if (this.slSource === 'subscribed' && this.slInstrument) {
+                        const slScript = Array.from(subscribedScripts.values())
+                            .find(s => `${s.tsym}|${s.exch}` === this.slInstrument);
+                        if (slScript && slScript.data?.lp) {
+                            slCheckPrice = parseFloat(slScript.data.lp);
+                        }
                     }
 
-                    if (this.trailing && !reason) this.updateTrailingSL(currentPrice);
-                    if (reason) this.execute(reason, currentPrice);
+                    const isBuy = this.direction === "BUY";
+                    let reason = "";
+
+                    // Check TARGET condition using target instrument price
+                    if (isBuy) {
+                        if (targetCheckPrice >= this.targetPrice) reason = "TARGET_HIT";
+                        else if (slCheckPrice <= this.slPrice) reason = "SL_TRIGGERED";
+                    } else {
+                        if (targetCheckPrice <= this.targetPrice) reason = "TARGET_HIT";
+                        else if (slCheckPrice >= this.slPrice) reason = "SL_TRIGGERED";
+                    }
+
+                    if (this.trailing && !reason) this.updateTrailingSL(orderSymbolPrice);
+                    if (reason) this.execute(reason, orderSymbolPrice);
                 }
 
                 updateTrailingSL(currentPrice) {
@@ -6497,6 +6923,16 @@
                         const currentPrice = marketData[o.symbol]?.ltp || o.entryPrice;
                         const mtm = o.calculateMTM(currentPrice);
                         const repeatBadge = o.repeatCount > 0 ? `<span class="repeat-badge" title="Will auto-retrigger ${o.repeatCount} more time(s) if SL hit">R${o.repeatCount}</span>` : '';
+                        // Helper to format target/SL source with CURRENT real-time price
+                        const formatSource = (source, instrument) => {
+                            if (source === 'subscribed' && instrument) {
+                                const script = Array.from(subscribedScripts.values())
+                                    .find(s => `${s.tsym}|${s.exch}` === instrument);
+                                const currentLTP = script?.data?.lp ? parseFloat(script.data.lp).toFixed(2) : 'N/A';
+                                return `(${instrument.split('|')[0]} @ ${currentLTP})`;
+                            }
+                            return '(Current @ ' + currentPrice.toFixed(2) + ')';
+                        };
                         return `
                             <div class="order-card active ${o.direction.toLowerCase()}">
                                 <div class="order-actions">
@@ -6510,8 +6946,8 @@
                                 <div class="order-details-grid">
                                     <div>📥 Entry: ${o.entryPrice.toFixed(2)}</div>
                                     <div>📈 LTP: ${currentPrice.toFixed(2)}</div>
-                                    <div>🎯 Target: ${o.targetPrice.toFixed(2)}</div>
-                                    <div>🛑 SL: ${o.slPrice.toFixed(2)}</div>
+                                    <div>🎯 Target: ${o.targetPrice.toFixed(2)} ${formatSource(o.targetSource, o.targetInstrument)}</div>
+                                    <div>🛑 SL: ${o.slPrice.toFixed(2)} ${formatSource(o.slSource, o.slInstrument)}</div>
                                     <div>📊 Qty: ${o.quantity}</div>
                                     <div>📈 MTM: <span class="${mtm >= 0 ? 'profit-badge' : 'loss-badge'}">${mtm.toFixed(2)}</span></div>
                                 </div>
@@ -6521,7 +6957,15 @@
                     }).join("");
 
                 document.getElementById("completedOrders").innerHTML = completedOrders
-                    .map(o => `
+                    .map(o => {
+                        // Helper to format target/SL source with base price
+                        const formatSource = (source, instrument, basePrice) => {
+                            if (source === 'subscribed' && instrument) {
+                                return `(${instrument.split('|')[0]} @ ${basePrice?.toFixed(2) || 'N/A'})`;
+                            }
+                            return '(Current @ ' + (basePrice?.toFixed(2) || 'N/A') + ')';
+                        };
+                        return `
                         <div class="order-card completed">
                             <div class="order-header">
                                 <strong>#${o.id}</strong> • ${o.symbol} • ${o.direction}
@@ -6531,12 +6975,12 @@
                                 <div>📥 Entry: ${o.entryPrice.toFixed(2)}</div>
                                 <div>📤 Exit: ${o.exitPrice.toFixed(2)}</div>
                                 <div>⏱️ ${o.exitTime}</div>
-                                <div>🎯 Target: ${o.targetPrice.toFixed(2)}</div>
-                                <div>🛑 SL: ${o.slPrice.toFixed(2)}</div>
+                                <div>🎯 Target: ${o.targetPrice.toFixed(2)} ${formatSource(o.targetSource, o.targetInstrument, o.targetSymbolLTP)}</div>
+                                <div>🛑 SL: ${o.slPrice.toFixed(2)} ${formatSource(o.slSource, o.slInstrument, o.slSymbolLTP)}</div>
                                 <div>📝 Reason: ${o.exitReason}</div>
                             </div>
                         </div>
-                    `).reverse().join("");
+                    `}).reverse().join("");
             }
 
             function debugLog(message, type = 'log') {
@@ -6596,6 +7040,56 @@
                                 }
                             }
                         }
+
+                        // Check if this price update affects Target/SL subscribed instruments
+                        let targetUpdated = false;
+                        let slUpdated = false;
+
+                        // Check Target Instrument
+                        if (order.targetSource === 'subscribed' && order.targetInstrument) {
+                            const targetScript = Array.from(subscribedScripts.values())
+                                .find(s => `${s.tsym}|${s.exch}` === order.targetInstrument);
+                            if (targetScript) {
+                                const targetAltSymbol = `${targetScript.exch}|${targetScript.token}`;
+                                debugLog(`Checking target instrument: order.targetInstrument=${order.targetInstrument}, targetAltSymbol=${targetAltSymbol}, incoming symbol=${symbol}`, 'log');
+                                if (order.targetInstrument === symbol || targetAltSymbol === symbol) {
+                                    const oldTargetPrice = order.targetPrice;
+                                    order.updateBasePrices(parseFloat(price), undefined);
+                                    targetUpdated = true;
+                                    if (order.active) {
+                                        debugLog(`Order #${order.id}: Target base price updated from ${order.targetSymbolLTP} to ${price}, Target price: ${oldTargetPrice.toFixed(2)} → ${order.targetPrice.toFixed(2)}`, 'info');
+                                    }
+                                }
+                            } else {
+                                debugLog(`Target script not found for ${order.targetInstrument}`, 'warn');
+                            }
+                        }
+
+                        // Check SL Instrument
+                        if (order.slSource === 'subscribed' && order.slInstrument) {
+                            const slScript = Array.from(subscribedScripts.values())
+                                .find(s => `${s.tsym}|${s.exch}` === order.slInstrument);
+                            if (slScript) {
+                                const slAltSymbol = `${slScript.exch}|${slScript.token}`;
+                                debugLog(`Checking SL instrument: order.slInstrument=${order.slInstrument}, slAltSymbol=${slAltSymbol}, incoming symbol=${symbol}`, 'log');
+                                if (order.slInstrument === symbol || slAltSymbol === symbol) {
+                                    const oldSLPrice = order.slPrice;
+                                    order.updateBasePrices(undefined, parseFloat(price));
+                                    slUpdated = true;
+                                    if (order.active) {
+                                        debugLog(`Order #${order.id}: SL base price updated from ${order.slSymbolLTP} to ${price}, SL price: ${oldSLPrice.toFixed(2)} → ${order.slPrice.toFixed(2)}`, 'info');
+                                    }
+                                }
+                            } else {
+                                debugLog(`SL script not found for ${order.slInstrument}`, 'warn');
+                            }
+                        }
+
+                        // Re-check conditions if target or SL was updated
+                        if ((targetUpdated || slUpdated) && order.active) {
+                            const currentOrderPrice = marketData[order.symbol]?.ltp || order.entryPrice;
+                            order.checkConditions(currentOrderPrice);
+                        }
                     });
 
                     // Update display after price updates
@@ -6611,6 +7105,16 @@
 
                 async handleUIPlaceOrder() {
                     try {
+                        // Get Target/SL Source Information
+                        const targetSource = document.getElementById("targetSource")?.value || 'current_symbol';
+                        const slSource = document.getElementById("slSource")?.value || 'current_symbol';
+                        const targetInstrument = targetSource === 'subscribed' 
+                            ? document.getElementById("targetInstrument")?.value 
+                            : null;
+                        const slInstrument = slSource === 'subscribed' 
+                            ? document.getElementById("slInstrument")?.value 
+                            : null;
+
                         const params = {
                             symbol: document.getElementById("symbol").value, // Format: TSym|Exch
                             direction: document.getElementById("direction").value,
@@ -6621,6 +7125,11 @@
                                 target: document.querySelector('input[name="targetType"]:checked').value === 'percent',
                                 sl: document.querySelector('input[name="slType"]:checked').value === 'percent'
                             },
+                            // Target/SL Source Configuration
+                            targetSource: targetSource,
+                            slSource: slSource,
+                            targetInstrument: targetInstrument,
+                            slInstrument: slInstrument,
                             trailing: document.getElementById("trailingSL").checked,
                             repeatCount: parseInt(document.getElementById("repeatCount").value) || 0,
                             triggerType: document.getElementById("algoTriggerType").value,
@@ -6707,6 +7216,16 @@
                         const slType = document.querySelector('input[name="modifySLType"]:checked')?.value;
                         const newTarget = parseFloat(document.getElementById("modifyTarget").value);
                         const newSL = parseFloat(document.getElementById("modifySL").value);
+                        
+                        // Get Target/SL Source Information
+                        const newTargetSource = document.getElementById("modifyTargetSource")?.value;
+                        const newSLSource = document.getElementById("modifySLSource")?.value;
+                        const newTargetInstrument = newTargetSource === 'subscribed' 
+                            ? document.getElementById("modifyTargetInstrument")?.value 
+                            : null;
+                        const newSLInstrument = newSLSource === 'subscribed' 
+                            ? document.getElementById("modifySLInstrument")?.value 
+                            : null;
 
                         const order = orders.find(o => o.id === orderId && o.active);
                         if (!order) throw new Error("Order not found");
@@ -6714,36 +7233,77 @@
                         const modifications = {};
                         let targetUpdated = false;
                         let slUpdated = false;
+                        let sourceChanged = false;
+
+                        // Check and update Target Source if changed
+                        if (newTargetSource && newTargetSource !== order.targetSource) {
+                            const oldSource = order.targetSource;
+                            order.targetSource = newTargetSource;
+                            order.targetInstrument = newTargetInstrument;
+                            
+                            // Get new base price if switching to subscribed instrument
+                            if (newTargetSource === 'subscribed' && newTargetInstrument) {
+                                const targetScript = Array.from(subscribedScripts.values())
+                                    .find(s => `${s.tsym}|${s.exch}` === newTargetInstrument);
+                                if (targetScript && targetScript.data?.lp) {
+                                    order.targetSymbolLTP = parseFloat(targetScript.data.lp);
+                                }
+                            } else if (newTargetSource === 'current_symbol') {
+                                order.targetSymbolLTP = order.entryPrice;
+                            }
+                            
+                            sourceChanged = true;
+                            debugLog(`Order #${orderId}: Target source changed from ${oldSource} to ${newTargetSource}${newTargetInstrument ? ' (' + newTargetInstrument + ')' : ''}`, 'info');
+                        }
+
+                        // Check and update SL Source if changed
+                        if (newSLSource && newSLSource !== order.slSource) {
+                            const oldSource = order.slSource;
+                            order.slSource = newSLSource;
+                            order.slInstrument = newSLInstrument;
+                            
+                            // Get new base price if switching to subscribed instrument
+                            if (newSLSource === 'subscribed' && newSLInstrument) {
+                                const slScript = Array.from(subscribedScripts.values())
+                                    .find(s => `${s.tsym}|${s.exch}` === newSLInstrument);
+                                if (slScript && slScript.data?.lp) {
+                                    order.slSymbolLTP = parseFloat(slScript.data.lp);
+                                }
+                            } else if (newSLSource === 'current_symbol') {
+                                order.slSymbolLTP = order.entryPrice;
+                            }
+                            
+                            sourceChanged = true;
+                            debugLog(`Order #${orderId}: SL source changed from ${oldSource} to ${newSLSource}${newSLInstrument ? ' (' + newSLInstrument + ')' : ''}`, 'info');
+                        }
 
                         // Check and update Target if provided
                         if (targetType && !isNaN(newTarget)) {
                             order.isPercent.target = targetType === 'percent';
-                            // Calculate the new target price directly
-                            order.targetPrice = order.isPercent.target
-                                ? (order.direction === "BUY" ? order.entryPrice * (1 + newTarget / 100) : order.entryPrice * (1 - newTarget / 100))
-                                : newTarget;
+                            order.target = newTarget;
+                            // Recalculate using the appropriate base price
+                            order.updatePrices(newTarget, order.sl);
                             modifications.target = newTarget;
                             modifications.targetIsPercent = order.isPercent.target;
                             targetUpdated = true;
-                            debugLog(`Order #${orderId}: Target updated to ${order.targetPrice.toFixed(2)} (${targetType})`, 'info');
+                            debugLog(`Order #${orderId}: Target updated to ${order.targetPrice.toFixed(2)} (${targetType}) based on ${order.targetSource === 'current_symbol' ? 'entry price' : order.targetInstrument}`, 'info');
                         }
 
                         // Check and update Stop Loss if provided
                         if (slType && !isNaN(newSL)) {
                             order.isPercent.sl = slType === 'percent';
-                            // Calculate the new SL price directly
-                            order.slPrice = order.isPercent.sl
-                                ? (order.direction === "BUY" ? order.entryPrice * (1 - newSL / 100) : order.entryPrice * (1 + newSL / 100))
-                                : newSL;
+                            order.sl = newSL;
+                            // Recalculate using the appropriate base price
+                            order.updatePrices(order.target, newSL);
                             modifications.sl = newSL;
                             modifications.slIsPercent = order.isPercent.sl;
                             slUpdated = true;
-                            debugLog(`Order #${orderId}: SL updated to ${order.slPrice.toFixed(2)} (${slType})`, 'info');
+                            debugLog(`Order #${orderId}: SL updated to ${order.slPrice.toFixed(2)} (${slType}) based on ${order.slSource === 'current_symbol' ? 'entry price' : order.slInstrument}`, 'info');
                         }
 
-                        if (!targetUpdated && !slUpdated) {
-                            debugLog(`Order #${orderId}: No valid target or SL provided for modification.`, 'warn');
-                            alert("Please provide a valid value for Target or Stop Loss to modify.");
+                        if (!targetUpdated && !slUpdated && !sourceChanged) {
+                            debugLog(`Order #${orderId}: No valid target, SL, or source change provided for modification.`, 'warn');
+                            alert("Please provide a valid value for Target, Stop Loss, or change the source to modify.");
                             return; // Don't proceed if nothing was updated
                         }
 
@@ -6751,11 +7311,6 @@
                         // await BrokerAPI.modifyOrder(order.brokerId, modifications);
                         debugLog(`Order #${orderId}: Modification request prepared (API call skipped): ${JSON.stringify(modifications)}`, 'info');
 
-                        // No longer needed as we update directly
-                        // order.updatePrices(
-                        //     !isNaN(newTarget) ? newTarget : order.targetPrice, 
-                        //     !isNaN(newSL) ? newSL : order.slPrice 
-                        // );
                         updateDisplay();
 
                     } catch (error) {
@@ -6813,6 +7368,32 @@
                             throw new Error("Unable to get current price. Please ensure the symbol is properly subscribed and receiving market data.");
                         }
 
+                        // Get Target Instrument Price if using subscribed instrument
+                        let targetSymbolLTP = parseFloat(currentPrice);
+                        if (params.targetSource === 'subscribed' && params.targetInstrument) {
+                            const targetScript = Array.from(subscribedScripts.values())
+                                .find(s => `${s.tsym}|${s.exch}` === params.targetInstrument);
+                            if (targetScript && targetScript.data?.lp) {
+                                targetSymbolLTP = parseFloat(targetScript.data.lp);
+                                debugLog(`Using Target Instrument ${params.targetInstrument} price: ${targetSymbolLTP}`, 'info');
+                            } else {
+                                debugLog(`Target instrument ${params.targetInstrument} not found or no price data, using current symbol price`, 'warn');
+                            }
+                        }
+
+                        // Get SL Instrument Price if using subscribed instrument
+                        let slSymbolLTP = parseFloat(currentPrice);
+                        if (params.slSource === 'subscribed' && params.slInstrument) {
+                            const slScript = Array.from(subscribedScripts.values())
+                                .find(s => `${s.tsym}|${s.exch}` === params.slInstrument);
+                            if (slScript && slScript.data?.lp) {
+                                slSymbolLTP = parseFloat(slScript.data.lp);
+                                debugLog(`Using SL Instrument ${params.slInstrument} price: ${slSymbolLTP}`, 'info');
+                            } else {
+                                debugLog(`SL instrument ${params.slInstrument} not found or no price data, using current symbol price`, 'warn');
+                            }
+                        }
+
                         // Place order using the correct scriptKey format
                         const brokerResponse = await placeOrder(
                             params.direction === 'BUY' ? 'B' : 'S',
@@ -6830,6 +7411,8 @@
                             id: orderIdCounter++,
                             brokerId: brokerResponse.norenordno,
                             entryPrice: parseFloat(currentPrice),
+                            targetSymbolLTP: targetSymbolLTP,
+                            slSymbolLTP: slSymbolLTP,
                             ...params
                         });
 
@@ -6958,9 +7541,18 @@
                 // Expose the trigger checking function
                 checkPendingTriggersForSymbol: checkPendingTriggersForSymbol,
                 // Expose debugLog publicly
-                debugLog: debugLog
+                debugLog: debugLog,
+                // Expose orders array for external access
+                get orders() { return orders; }
             };
         })();
+
+        // Periodic refresh for Active Positions display (to show real-time LTP updates)
+        setInterval(() => {
+            if (OrderSystem.orders && OrderSystem.orders.some(o => o.active)) {
+                updateDisplay();
+            }
+        }, 1000);
 
         // Value Persistence Functions for Algo Trading Terminal
         function saveAlgoValues() {
