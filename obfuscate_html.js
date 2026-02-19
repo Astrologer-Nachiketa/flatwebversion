@@ -3,64 +3,130 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 const { parse } = require('node-html-parser');
 
 const inputFile = 'index.html';
-const outputFile = 'index_obfuscated.html';
+const outputFile = 'indexprotect.html';
 
-// Configuration for javascript-obfuscator
-const obfuscationOptions = {
+// Very light obfuscation - should work with any code
+const safeObfuscationOptions = {
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    debugProtection: false,
+    disableConsoleOutput: false,
+    identifierNamesGenerator: 'hexadecimal',
+    log: false,
+    numbersToExpressions: false,
+    renameGlobals: false,
+    selfDefending: false,
+    simplify: false,
+    splitStrings: false,
+    stringArray: false,
+    unicodeEscapeSequence: false
+};
+
+// Light obfuscation with string array
+const lightObfuscationOptions = {
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    debugProtection: false,
+    disableConsoleOutput: false,
+    identifierNamesGenerator: 'hexadecimal',
+    log: false,
+    numbersToExpressions: false,
+    renameGlobals: false,
+    selfDefending: false,
+    simplify: true,
+    splitStrings: false,
+    stringArray: true,
+    stringArrayCallsTransform: true,
+    stringArrayEncoding: ['none'],
+    stringArrayThreshold: 0.5,
+    unicodeEscapeSequence: false
+};
+
+// Medium obfuscation - balanced protection
+const mediumObfuscationOptions = {
     compact: true,
     controlFlowFlattening: true,
-    controlFlowFlatteningThreshold: 0.75,
-    deadCodeInjection: true,
-    deadCodeInjectionThreshold: 0.4,
+    controlFlowFlatteningThreshold: 0.3,
+    deadCodeInjection: false,
     debugProtection: false,
-    debugProtectionInterval: 0,
     disableConsoleOutput: true,
     identifierNamesGenerator: 'hexadecimal',
     log: false,
-    numbersToExpressions: true,
+    numbersToExpressions: false,
     renameGlobals: false,
-    selfDefending: true,
+    selfDefending: false,
     simplify: true,
     splitStrings: true,
-    splitStringsChunkLength: 10,
+    splitStringsChunkLength: 5,
     stringArray: true,
     stringArrayCallsTransform: true,
     stringArrayEncoding: ['base64'],
-    stringArrayIndexShift: true,
-    stringArrayRotate: true,
-    stringArrayShuffle: true,
-    stringArrayWrappersCount: 1,
-    stringArrayWrappersChainedCalls: true,
-    stringArrayWrappersParametersMaxCount: 2,
-    stringArrayWrappersType: 'variable',
-    stringArrayThreshold: 0.75,
+    stringArrayThreshold: 0.6,
     unicodeEscapeSequence: false
 };
+
+function obfuscateScript(content, options, description) {
+    try {
+        console.log(`  Trying ${description}...`);
+        const result = JavaScriptObfuscator.obfuscate(content, options);
+        console.log(`  ✓ ${description} succeeded`);
+        return result.getObfuscatedCode();
+    } catch (err) {
+        console.log(`  ✗ ${description} failed: ${err.message.split('\n')[0]}`);
+        return null;
+    }
+}
 
 try {
     const htmlContent = fs.readFileSync(inputFile, 'utf-8');
     const root = parse(htmlContent);
     const scripts = root.querySelectorAll('script');
 
-    console.log(`Found ${scripts.length} script tags.`);
+    console.log(`Found ${scripts.length} script tag(s).\n`);
+
+    let obfuscatedCount = 0;
+    let failedCount = 0;
 
     scripts.forEach((script, index) => {
-        const content = script.textContent;
-        // Only obfuscate if there is content (inline script) and it's not JSON (e.g. type="application/json")
-        // and doesn't have a src attribute (external script)
-        if (content && content.trim().length > 0 && !script.getAttribute('src') && (!script.getAttribute('type') || script.getAttribute('type') === 'text/javascript' || script.getAttribute('type') === 'module')) {
-            console.log(`Obfuscating inline script #${index + 1}...`);
-            try {
-                const obfuscationResult = JavaScriptObfuscator.obfuscate(content, obfuscationOptions);
-                script.textContent = obfuscationResult.getObfuscatedCode();
-            } catch (err) {
-                console.error(`Error obfuscating script #${index + 1}:`, err.message);
+        // Use rawText to avoid HTML entity decoding (textContent decodes &amp; -> &, &#39; -> ', etc.)
+        const content = script.rawText || script.textContent;
+
+        if (content && content.trim().length > 0 && !script.getAttribute('src') &&
+            (!script.getAttribute('type') || script.getAttribute('type') === 'text/javascript' || script.getAttribute('type') === 'module')) {
+
+            console.log(`Processing inline script #${index + 1} (${content.length} chars)...`);
+
+            let obfuscatedCode = null;
+
+            // Try progressively lighter obfuscation
+            obfuscatedCode = obfuscateScript(content, mediumObfuscationOptions, 'medium protection');
+
+            if (!obfuscatedCode) {
+                obfuscatedCode = obfuscateScript(content, lightObfuscationOptions, 'light protection');
+            }
+
+            if (!obfuscatedCode) {
+                obfuscatedCode = obfuscateScript(content, safeObfuscationOptions, 'safe protection');
+            }
+
+            if (obfuscatedCode) {
+                // Use innerHTML to set content without re-encoding special chars
+                script.innerHTML = obfuscatedCode;
+                obfuscatedCount++;
+                console.log(`  ✓ Script obfuscated successfully\n`);
+            } else {
+                console.log(`  ⚠ Keeping original code (all obfuscation methods failed)\n`);
+                failedCount++;
             }
         }
     });
 
     fs.writeFileSync(outputFile, root.toString());
-    console.log(`Successfully created ${outputFile}`);
+    console.log(`✓ Successfully created ${outputFile}`);
+    console.log(`  - Scripts obfuscated: ${obfuscatedCount}`);
+    console.log(`  - Scripts failed: ${failedCount}`);
 
 } catch (err) {
     console.error('Error processing file:', err);
