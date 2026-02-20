@@ -3662,13 +3662,13 @@
                         <h3>New Order</h3>
                         <div class="input-group">
                             <label class="algo-label">Symbol</label>
-                            <select id="symbol" class="algo-select" onchange="handleSymbolChangeForSLHistorical()">
+                            <select id="symbol" class="algo-select">
                                 <!-- Dynamically populated -->
                             </select>
                         </div>
                         <div class="input-group">
                             <label class="algo-label">Direction</label>
-                            <select id="direction" class="algo-select" onchange="handleDirectionChangeForSLHistorical()">
+                            <select id="direction" class="algo-select">
                                 <option value="BUY">Buy</option>
                                 <option value="SELL">Sell</option>
                             </select>
@@ -3714,7 +3714,7 @@
                                 </div>
                                 <div class="input-group" id="slInstrumentGroup" style="display: none;">
                                     <label class="algo-label">Instrument</label>
-                                    <select id="slInstrument" class="algo-select" onchange="handleSLHistoricalTypeChange()"></select>
+                                    <select id="slInstrument" class="algo-select"></select>
                                 </div>
                                 <div class="input-radio-group">
                                     <label>
@@ -3722,12 +3722,6 @@
                                     </label>
                                     <label>
                                         <input type="radio" name="slType" value="value"> Value
-                                    </label>
-                                    <label title="Historical High">
-                                        <input type="radio" name="slType" value="hist_high"> Hist. High
-                                    </label>
-                                    <label title="Historical Low">
-                                        <input type="radio" name="slType" value="hist_low"> Hist. Low
                                     </label>
                                 </div>
                                 <input type="number" id="slInput" class="algo-input" step="0.01" value="1">
@@ -3948,12 +3942,6 @@
                                     </label>
                                     <label>
                                         <input type="radio" name="modifySLType" value="value"> Value
-                                    </label>
-                                    <label title="Historical High">
-                                        <input type="radio" name="modifySLType" value="hist_high"> Hist. High
-                                    </label>
-                                    <label title="Historical Low">
-                                        <input type="radio" name="modifySLType" value="hist_low"> Hist. Low
                                     </label>
                                 </div>
                                 <input type="number" id="modifySL" class="algo-input" step="0.01">
@@ -4278,9 +4266,6 @@
                     slInstrumentGroup.style.display = 'none';
                 }
             }
-            
-            // Update historical value based on new source
-            handleSLHistoricalTypeChange();
         }
 
         // Handle Modify Target Source Change
@@ -4394,8 +4379,7 @@
             const slTypeRadios = document.querySelectorAll('input[name="modifySLType"]');
             slTypeRadios.forEach(radio => {
                 radio.checked = (radio.value === 'percent' && order.isPercent?.sl) || 
-                               (radio.value === 'value' && !order.isPercent?.sl) ||
-                               (radio.value === (order.slType || 'percent') && order.slType && order.slType !== 'percent' && order.slType !== 'value');
+                               (radio.value === 'value' && !order.isPercent?.sl);
             });
             
             OrderSystem.debugLog(`Populated modify form for Order #${orderId} - Target: ${order.target} (${order.targetSource}), SL: ${order.sl} (${order.slSource})`, 'info');
@@ -6932,8 +6916,6 @@
                     this.slSource = params.slSource || 'current_symbol';
                     this.targetInstrument = params.targetInstrument || null;
                     this.slInstrument = params.slInstrument || null;
-                    // SL Type (percent, value, hist_high, hist_low)
-                    this.slType = params.slType || 'percent';
                     // Use passed target/slSymbolLTP if available, otherwise default to entryPrice
                     this.targetSymbolLTP = params.targetSymbolLTP !== undefined ? params.targetSymbolLTP : params.entryPrice;
                     this.slSymbolLTP = params.slSymbolLTP !== undefined ? params.slSymbolLTP : params.entryPrice;
@@ -6960,35 +6942,11 @@
                             : targetBasePrice * (1 - target / 100))
                         : target;
 
-                    // Handle SL - check for historical types
-                    if (this.slType === 'hist_high' || this.slType === 'hist_low') {
-                        // Determine which symbol to use based on SL Source
-                        let symbolToUse = this.symbol;
-                        if (this.slSource === 'subscribed' && this.slInstrument) {
-                            symbolToUse = this.slInstrument;
-                        }
-                        
-                        const [tsym, exch] = symbolToUse.split('|');
-                        const script = Array.from(subscribedScripts.values()).find(s => s.tsym === tsym && s.exch === exch);
-                        if (script) {
-                            const histValue = this.slType === 'hist_high' 
-                                ? parseFloat(script.historicalHigh) 
-                                : parseFloat(script.historicalLow);
-                            if (!isNaN(histValue) && histValue > 0) {
-                                this.slPrice = histValue;
-                            } else {
-                                this.slPrice = sl;
-                            }
-                        } else {
-                            this.slPrice = sl;
-                        }
-                    } else {
-                        this.slPrice = this.isPercent.sl ?
-                            (this.direction === "BUY"
-                                ? slBasePrice * (1 - sl / 100)
-                                : slBasePrice * (1 + sl / 100))
-                            : sl;
-                    }
+                    this.slPrice = this.isPercent.sl ?
+                        (this.direction === "BUY"
+                            ? slBasePrice * (1 - sl / 100)
+                            : slBasePrice * (1 + sl / 100))
+                        : sl;
                 }
 
                 // Helper method to update base prices from subscribed instrument
@@ -7011,36 +6969,6 @@
 
                 checkConditions(orderSymbolPrice) {
                     if (!this.active) return;
-
-                    // Update SL price based on historical values if applicable (only in favorable direction)
-                    if (this.slType === 'hist_high' || this.slType === 'hist_low') {
-                        // Determine which symbol to use based on SL Source
-                        let symbolToUse = this.symbol;
-                        if (this.slSource === 'subscribed' && this.slInstrument) {
-                            symbolToUse = this.slInstrument;
-                        }
-                        
-                        const [tsym, exch] = symbolToUse.split('|');
-                        const script = Array.from(subscribedScripts.values()).find(s => s.tsym === tsym && s.exch === exch);
-                        if (script) {
-                            const isBuy = this.direction === "BUY";
-                            let newSLPrice = null;
-                            
-                            if (this.slType === 'hist_high') {
-                                newSLPrice = parseFloat(script.historicalHigh);
-                                // For SELL: update if new hist_high < previous (moves down - favorable)
-                                if (!isBuy && newSLPrice < this.slPrice) {
-                                    this.slPrice = newSLPrice;
-                                }
-                            } else if (this.slType === 'hist_low') {
-                                newSLPrice = parseFloat(script.historicalLow);
-                                // For BUY: update if new hist_low > previous (moves up - favorable)
-                                if (isBuy && newSLPrice > this.slPrice) {
-                                    this.slPrice = newSLPrice;
-                                }
-                            }
-                        }
-                    }
 
                     // Get current prices for target and SL instruments
                     let targetCheckPrice = orderSymbolPrice;
@@ -7082,40 +7010,6 @@
 
                 updateTrailingSL(currentPrice) {
                     const isBuy = this.direction === "BUY";
-                    
-                    // Handle historical SL types - track historical value
-                    if (this.slType === 'hist_high' || this.slType === 'hist_low') {
-                        // Determine which symbol to use based on SL Source
-                        let symbolToUse = this.symbol;
-                        if (this.slSource === 'subscribed' && this.slInstrument) {
-                            symbolToUse = this.slInstrument;
-                        }
-                        
-                        const [tsym, exch] = symbolToUse.split('|');
-                        const script = Array.from(subscribedScripts.values()).find(s => s.tsym === tsym && s.exch === exch);
-                        
-                        if (script) {
-                            let newSL = null;
-                            if (this.slType === 'hist_high') {
-                                newSL = parseFloat(script.historicalHigh);
-                                // For SELL: update if new hist_high < previous (moves down - favorable)
-                                if (!isBuy && newSL < this.slPrice) {
-                                    this.slPrice = newSL;
-                                    this.lastUpdate = Date.now();
-                                }
-                            } else {
-                                newSL = parseFloat(script.historicalLow);
-                                // For BUY: update if new hist_low > previous (moves up - favorable)
-                                if (isBuy && newSL > this.slPrice) {
-                                    this.slPrice = newSL;
-                                    this.lastUpdate = Date.now();
-                                }
-                            }
-                        }
-                        return;
-                    }
-                    
-                    // Standard percentage-based trailing SL
                     const newSL = isBuy
                         ? currentPrice * (1 - this.initialSL / 100)
                         : currentPrice * (1 + this.initialSL / 100);
@@ -7426,7 +7320,6 @@
                                 target: document.querySelector('input[name="targetType"]:checked').value === 'percent',
                                 sl: document.querySelector('input[name="slType"]:checked').value === 'percent'
                             },
-                            slType: document.querySelector('input[name="slType"]:checked').value,
                             // Target/SL Source Configuration
                             targetSource: targetSource,
                             slSource: slSource,
@@ -7666,7 +7559,6 @@
                         // Check and update Stop Loss if provided
                         if (slType && !isNaN(newSL)) {
                             order.isPercent.sl = slType === 'percent';
-                            order.slType = slType;
                             order.sl = newSL;
                             // Recalculate using the appropriate base price
                             order.updatePrices(order.target, newSL);
@@ -7929,37 +7821,6 @@
         // Periodic refresh for Active Positions display (to show real-time LTP updates)
         setInterval(() => {
             if (OrderSystem.orders && OrderSystem.orders.some(o => o.active)) {
-                // Update SL prices for historical types in real-time
-                OrderSystem.orders.forEach(order => {
-                    if (order.active && (order.slType === 'hist_high' || order.slType === 'hist_low')) {
-                        // Determine which symbol to use based on SL Source
-                        let symbolToUse = order.symbol; // default to order symbol
-                        if (order.slSource === 'subscribed' && order.slInstrument) {
-                            symbolToUse = order.slInstrument;
-                        }
-                        
-                        const [tsym, exch] = symbolToUse.split('|');
-                        const script = Array.from(subscribedScripts.values()).find(s => s.tsym === tsym && s.exch === exch);
-                        if (script) {
-                            const isBuy = order.direction === "BUY";
-                            let newSLPrice = null;
-                            
-                            if (order.slType === 'hist_high') {
-                                newSLPrice = parseFloat(script.historicalHigh);
-                                // For SELL: update if new hist_high < previous (moves down - favorable)
-                                if (!isBuy && newSLPrice < order.slPrice) {
-                                    order.slPrice = newSLPrice;
-                                }
-                            } else if (order.slType === 'hist_low') {
-                                newSLPrice = parseFloat(script.historicalLow);
-                                // For BUY: update if new hist_low > previous (moves up - favorable)
-                                if (isBuy && newSLPrice > order.slPrice) {
-                                    order.slPrice = newSLPrice;
-                                }
-                            }
-                        }
-                    }
-                });
                 updateDisplay();
             }
         }, 1000);
@@ -8223,98 +8084,9 @@
             const radioGroups = ['targetType', 'slType', 'algoTriggerValueSource', 'algoTriggerValueSource2'];
             radioGroups.forEach(groupName => {
                 document.querySelectorAll(`input[name="${groupName}"]`).forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        saveAlgoValues();
-                        // Handle SL historical type selection
-                        if (groupName === 'slType') {
-                            handleSLHistoricalTypeChange();
-                        }
-                    });
+                    radio.addEventListener('change', saveAlgoValues);
                 });
             });
-
-            // Function to handle SL historical type selection
-            function handleSLHistoricalTypeChange() {
-                const selectedType = document.querySelector('input[name="slType"]:checked')?.value;
-                const slSource = document.getElementById('slSource')?.value;
-                
-                if (selectedType === 'hist_high' || selectedType === 'hist_low') {
-                    let symbolToUse = null;
-                    
-                    // Determine which symbol to use based on SL Source
-                    if (slSource === 'subscribed') {
-                        const slInstrument = document.getElementById('slInstrument')?.value;
-                        if (slInstrument) {
-                            symbolToUse = slInstrument;
-                        }
-                    }
-                    
-                    // Fallback to current symbol if not using subscribed
-                    if (!symbolToUse) {
-                        const symbolSelect = document.getElementById('symbol');
-                        symbolToUse = symbolSelect?.value;
-                    }
-                    
-                    if (symbolToUse) {
-                        const [tsym, exch] = symbolToUse.split('|');
-                        const script = Array.from(subscribedScripts.values()).find(s => s.tsym === tsym && s.exch === exch);
-                        
-                        if (script) {
-                            let histValue = null;
-                            if (selectedType === 'hist_high') {
-                                histValue = parseFloat(script.historicalHigh);
-                            } else {
-                                histValue = parseFloat(script.historicalLow);
-                            }
-                            
-                            if (!isNaN(histValue)) {
-                                document.getElementById('slInput').value = histValue.toFixed(2);
-                            }
-                        }
-                    }
-                } else if (selectedType === 'percent' || selectedType === 'value') {
-                    // Reset to default value when selecting percent or value
-                    document.getElementById('slInput').value = '1';
-                }
-            }
-            window.handleSLHistoricalTypeChange = handleSLHistoricalTypeChange;
-
-            // Function to update SL historical value when symbol changes
-            function handleSymbolChangeForSLHistorical() {
-                const selectedType = document.querySelector('input[name="slType"]:checked')?.value;
-                if (selectedType === 'hist_high' || selectedType === 'hist_low') {
-                    handleSLHistoricalTypeChange();
-                }
-            }
-            window.handleSymbolChangeForSLHistorical = handleSymbolChangeForSLHistorical;
-
-            // Function to show/hide SL historical options based on direction
-            function handleDirectionChangeForSLHistorical() {
-                const direction = document.getElementById('direction')?.value;
-                const slTypeRadios = document.querySelectorAll('input[name="slType"]');
-                
-                slTypeRadios.forEach(radio => {
-                    if (radio.value === 'hist_high') {
-                        // Show for SELL, hide for BUY
-                        radio.parentElement.style.display = (direction === 'SELL') ? '' : 'none';
-                        if (direction === 'BUY' && radio.checked) {
-                            document.querySelector('input[name="slType"][value="percent"]').checked = true;
-                        }
-                    } else if (radio.value === 'hist_low') {
-                        // Show for BUY, hide for SELL
-                        radio.parentElement.style.display = (direction === 'BUY') ? '' : 'none';
-                        if (direction === 'SELL' && radio.checked) {
-                            document.querySelector('input[name="slType"][value="percent"]').checked = true;
-                        }
-                    }
-                });
-                
-                handleSLHistoricalTypeChange();
-            }
-            window.handleDirectionChangeForSLHistorical = handleDirectionChangeForSLHistorical;
-            
-            // Initialize direction-based SL options on load
-            handleDirectionChangeForSLHistorical();
 
             const checkboxes = ['trailingSL', 'requireTvCondition', 'requireSignalCondition'];
             checkboxes.forEach(checkboxId => {
